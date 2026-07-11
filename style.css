@@ -10,25 +10,33 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
-  min-height: 100vh;
   background: var(--bg);
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC",
     "Microsoft YaHei", sans-serif;
 }
 
-.page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  padding: 72px 24px;
+.hero {
+  width: 100%;
+  background: #111827;
+}
+
+.hero-image {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .intro {
-  width: min(760px, 100%);
+  width: min(760px, calc(100% - 48px));
   margin: 0 auto;
+  padding: 96px 0 112px;
 }
 
 .eyebrow {
@@ -89,9 +97,9 @@ h1 {
 }
 
 @media (max-width: 640px) {
-  .page {
-    align-items: flex-start;
-    padding: 56px 22px;
+  .intro {
+    width: min(100% - 40px, 760px);
+    padding: 72px 0 88px;
   }
 
   .name-en {
