@@ -3,33 +3,69 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="刘宇哲 / Yuzhe Liu 的个人主页" />
   <title>刘宇哲 | Yuzhe Liu</title>
-  <link rel="preload" href="avatar.jpg?v=20260712b" as="image" />
-  <link rel="stylesheet" href="style.css?v=20260712b" />
+  <link rel="preload" href="avatar_new.jpg?v=20260712d" as="image" />
+  <link rel="stylesheet" href="style.css?v=20260712d" />
+  <script src="script.js?v=20260712d" defer></script>
 </head>
 <body>
-  <main class="hero">
-    <section class="intro">
-      <p class="eyebrow">Personal Homepage</p>
+  <main class="site-shell">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <div class="hero-vignette" aria-hidden="true"></div>
+    <div class="aurora aurora-a" aria-hidden="true"></div>
+    <div class="aurora aurora-b" aria-hidden="true"></div>
 
-      <h1>刘宇哲</h1>
-      <p class="name-en">Yuzhe Liu</p>
+    <header class="navbar">
+      <a class="brand" href="#">Yuzhe Liu</a>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#about">About</a>
+        <a href="#interests">Interests</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </header>
 
-      <p class="bio zh">
-        清华大学计算机与金融双学位本科生。目前在 THU College AI ΔI Lab 参与 LLM 与 Transformer 相关研究，也在大模型、量化等方向探索自己的职业志趣。
-      </p>
+    <section class="hero" id="about" aria-labelledby="home-title">
+      <div class="hero-copy">
+        <p class="eyebrow">Personal Homepage</p>
+        <h1 id="home-title">刘宇哲</h1>
+        <p class="name-en">Yuzhe Liu</p>
+        <p class="headline">
+          清华大学计算机与金融双学位本科生。目前在 THU College AI ΔI Lab 参与 LLM 与 Transformer 相关研究，也在大模型、量化等方向探索自己的职业志趣。
+        </p>
+        <p class="headline headline-en">
+          Undergraduate student pursuing a dual degree in Computer Science and Finance at Tsinghua University.
+        </p>
 
-      <p class="bio en">
-        Undergraduate student pursuing a dual degree in Computer Science and Finance at Tsinghua University. Currently involved in LLM and Transformer-related research at THU College AI ΔI Lab, while exploring long-term interests in large language models, quantitative finance, and related fields.
-      </p>
-
-      <div class="links">
-        <a href="https://github.com/yz-liu-creater" target="_blank" rel="noreferrer">GitHub</a>
-        <a href="mailto:liuyuzhe473@gmail.com">Email</a>
+        <div class="hero-actions" id="contact">
+          <a href="https://github.com/yz-liu-creater" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="mailto:liuyuzhe473@gmail.com">Email</a>
+        </div>
       </div>
-    </section>
 
-    <p class="scroll-cue">Scroll to view the image</p>
+      <aside class="info-panel" id="interests" aria-label="Profile details">
+        <p class="panel-kicker">Now</p>
+        <h2>Exploring LLMs, Transformers, and Quantitative Finance.</h2>
+        <div class="panel-grid">
+          <div>
+            <span>University</span>
+            <strong>Tsinghua University</strong>
+          </div>
+          <div>
+            <span>Program</span>
+            <strong>CS + Finance</strong>
+          </div>
+          <div>
+            <span>Lab</span>
+            <strong>THU College AI ΔI Lab</strong>
+          </div>
+          <div>
+            <span>Focus</span>
+            <strong>LLM / Transformer / Quant</strong>
+          </div>
+        </div>
+      </aside>
+    </section>
   </main>
 </body>
 </html>
