@@ -5,38 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="刘宇哲 / Yuzhe Liu 的个人主页" />
   <title>刘宇哲 | Yuzhe Liu</title>
-  <link rel="preload" href="avatar_new.jpg?v=20260712f" as="image" />
-  <link rel="stylesheet" href="style.css?v=20260712f" />
-  <script src="script.js?v=20260712f" defer></script>
+  <link rel="preload" href="avatar_new.jpg?v=20260712h" as="image" />
+  <link rel="stylesheet" href="style.css?v=20260712h" />
+  <script src="script.js?v=20260712h" defer></script>
 </head>
-<body>
-  <main class="site-shell">
+<body data-page="about">
+  <main class="site-shell home-shell">
     <div class="hero-bg" aria-hidden="true"></div>
     <div class="hero-vignette" aria-hidden="true"></div>
     <div class="aurora aurora-a" aria-hidden="true"></div>
     <div class="aurora aurora-b" aria-hidden="true"></div>
 
     <header class="navbar">
-      <a class="brand" href="#about">Yuzhe Liu</a>
+      <a class="brand" href="index.html">Yuzhe Liu</a>
       <nav class="nav-links" aria-label="Primary navigation">
-        <a href="#about">About</a>
-        <a href="#researchs">Researchs</a>
-        <a href="#projects">Projects</a>
-        <a href="#blogs">Blogs</a>
-        <a href="#contact">Contact</a>
+        <a href="index.html" data-nav="about">About</a>
+        <a href="researchs.html" data-nav="researchs">Researchs</a>
+        <a href="projects.html" data-nav="projects">Projects</a>
+        <a href="blogs.html" data-nav="blogs">Blogs</a>
+        <a href="contact.html" data-nav="contact">Contact</a>
       </nav>
     </header>
 
-    <section class="hero" id="about" aria-labelledby="home-title">
+    <section class="hero hero-home" id="about" aria-labelledby="home-title">
       <div class="hero-copy">
         <p class="eyebrow">About</p>
         <h1 id="home-title">刘宇哲</h1>
         <p class="name-en">Yuzhe Liu</p>
         <p class="headline">
-          清华大学计算机与金融双学位本科生。目前在 THU College AI ΔI Lab 参与 LLM 与 Transformer 相关研究，也在大模型、量化等方向探索自己的职业志趣。
+          清华大学计算机与金融双学位大二学生，正在 THU College AI ΔI Lab 参与 LLM 与 Transformer 方向研究，也在大模型和量化等方向探索自己的职业志趣。
         </p>
         <p class="headline headline-en">
-          Undergraduate student pursuing a dual degree in Computer Science and Finance at Tsinghua University.
+          Undergraduate student in the Computer Science and Finance dual-degree program at Tsinghua University, exploring LLMs, Transformers, and model quantization.
         </p>
 
         <div class="hero-actions">
@@ -45,49 +45,32 @@
         </div>
       </div>
 
-      <aside class="hero-side" aria-label="Profile summary">
-        <p class="panel-kicker">Now</p>
-        <h2>Compact now, ready to grow later.</h2>
+      <aside class="hero-side home-launcher" aria-label="Page launcher">
+        <p class="panel-kicker">Pages</p>
+        <h2>Open the four pages</h2>
         <p class="hero-side-copy">
-          Researchs、Projects、Blogs、Contact 都已经留好入口。以后有内容时，直接往对应窗口里加。
+          Researchs、Projects、Blogs、Contact 都是独立页面。你以后要补内容，直接进对应页面填就行。
         </p>
-        <a class="side-link" href="#researchs">View reserved sections</a>
+
+        <div class="launch-list">
+          <a class="launch-item" href="researchs.html">
+            <strong>Researchs</strong>
+            <small>Papers, notes, and experiments.</small>
+          </a>
+          <a class="launch-item" href="projects.html">
+            <strong>Projects</strong>
+            <small>Repos, demos, and tools.</small>
+          </a>
+          <a class="launch-item" href="blogs.html">
+            <strong>Blogs</strong>
+            <small>Posts, drafts, and archives.</small>
+          </a>
+          <a class="launch-item" href="contact.html">
+            <strong>Contact</strong>
+            <small>Friend links live here.</small>
+          </a>
+        </div>
       </aside>
-    </section>
-
-    <section class="section-grid" aria-label="Reserved sections">
-      <article class="slot-card" id="researchs">
-        <p class="slot-label">Researchs</p>
-        <h2>Reserved</h2>
-        <div class="slot-window">
-          <span>以后放论文、实验、研究记录。</span>
-        </div>
-      </article>
-
-      <article class="slot-card" id="projects">
-        <p class="slot-label">Projects</p>
-        <h2>Reserved</h2>
-        <div class="slot-window">
-          <span>以后放项目、复现、工具和 GitHub 仓库。</span>
-        </div>
-      </article>
-
-      <article class="slot-card" id="blogs">
-        <p class="slot-label">Blogs</p>
-        <h2>Reserved</h2>
-        <div class="slot-window">
-          <span>以后放博客、笔记、读书和想法记录。</span>
-        </div>
-      </article>
-
-      <article class="slot-card contact-card" id="contact">
-        <p class="slot-label">Contact</p>
-        <h2>Reach me</h2>
-        <div class="slot-window contact-window">
-          <a href="https://github.com/yz-liu-creater" target="_blank" rel="noreferrer">GitHub</a>
-          <a href="mailto:liuyuzhe473@gmail.com">Email</a>
-        </div>
-      </article>
     </section>
   </main>
 </body>
