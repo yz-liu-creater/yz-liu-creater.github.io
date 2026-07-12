@@ -36,7 +36,7 @@ body {
       rgba(225, 241, 251, 0.12) 48%,
       rgba(14, 49, 72, 0.08) 100%
     ),
-    url("avatar.jpg");
+    url("avatar.jpg?v=20260712");
   background-repeat: no-repeat;
   background-position: center top;
   background-size: 100% auto;
