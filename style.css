@@ -1,9 +1,10 @@
 :root {
-  --bg: #f7f5f0;
-  --text: #1f2933;
-  --muted: #667085;
-  --line: #d8d2c4;
-  --accent: #2563eb;
+  --ink: #0e3148;
+  --ink-soft: #1e4b67;
+  --sky: #dcecf8;
+  --sea: #1d78a6;
+  --rock: #9c6d47;
+  --white: #ffffff;
 }
 
 * {
@@ -16,90 +17,138 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--sky);
+  color: var(--ink);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC",
     "Microsoft YaHei", sans-serif;
 }
 
 .hero {
-  width: 100%;
-  background: #111827;
-}
-
-.hero-image {
-  display: block;
-  width: 100%;
-  height: auto;
+  position: relative;
+  min-height: max(100svh, 133.4vw);
+  overflow: clip;
+  background-color: var(--sky);
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(225, 241, 251, 0.82) 0%,
+      rgba(225, 241, 251, 0.52) 22%,
+      rgba(225, 241, 251, 0.12) 48%,
+      rgba(14, 49, 72, 0.08) 100%
+    ),
+    url("avatar.jpg");
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: 100% auto;
 }
 
 .intro {
-  width: min(760px, calc(100% - 48px));
-  margin: 0 auto;
-  padding: 96px 0 112px;
+  position: relative;
+  z-index: 1;
+  width: min(760px, calc(100% - 72px));
+  margin-left: clamp(28px, 7vw, 132px);
+  padding-top: clamp(48px, 7.4vw, 132px);
+  text-shadow: 0 1px 18px rgba(255, 255, 255, 0.72);
 }
 
 .eyebrow {
-  margin: 0 0 28px;
-  color: var(--muted);
+  width: fit-content;
+  margin: 0 0 22px;
+  padding-bottom: 9px;
+  color: var(--sea);
   font-size: 14px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  border-bottom: 2px solid rgba(156, 109, 71, 0.38);
 }
 
 h1 {
   margin: 0;
-  font-size: clamp(48px, 8vw, 84px);
-  line-height: 1.05;
-  font-weight: 700;
+  color: var(--ink);
+  font-size: clamp(56px, 9vw, 120px);
+  line-height: 0.98;
+  font-weight: 760;
 }
 
 .name-en {
-  margin: 12px 0 40px;
-  color: var(--muted);
-  font-size: 24px;
+  margin: 14px 0 34px;
+  color: var(--ink-soft);
+  font-size: clamp(21px, 2.2vw, 30px);
+  font-weight: 500;
 }
 
 .bio {
   max-width: 720px;
   margin: 0;
-  font-size: 19px;
-  line-height: 1.85;
+  color: var(--ink);
+  font-size: clamp(17px, 1.42vw, 20px);
+  line-height: 1.78;
+  font-weight: 500;
 }
 
 .bio + .bio {
-  margin-top: 20px;
+  margin-top: 18px;
 }
 
 .en {
-  color: #3f4a5a;
-  font-size: 18px;
+  max-width: 690px;
+  color: rgba(14, 49, 72, 0.9);
+  font-size: clamp(15px, 1.18vw, 17px);
 }
 
 .links {
   display: flex;
-  gap: 16px;
+  gap: 14px;
   flex-wrap: wrap;
-  margin-top: 44px;
-  padding-top: 28px;
-  border-top: 1px solid var(--line);
+  margin-top: 34px;
 }
 
 .links a {
-  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 15px;
+  color: var(--white);
+  background: rgba(14, 49, 72, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 999px;
+  box-shadow: 0 12px 28px rgba(14, 49, 72, 0.16);
   text-decoration: none;
   font-size: 16px;
   font-weight: 600;
+  text-shadow: none;
+  transition: transform 160ms ease, background-color 160ms ease;
 }
 
 .links a:hover {
-  text-decoration: underline;
+  background: rgba(29, 120, 166, 0.92);
+  transform: translateY(-1px);
+}
+
+.scroll-cue {
+  position: fixed;
+  right: clamp(20px, 4vw, 54px);
+  bottom: clamp(18px, 4vw, 42px);
+  z-index: 2;
+  margin: 0;
+  color: rgba(14, 49, 72, 0.78);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 16px rgba(255, 255, 255, 0.84);
 }
 
 @media (max-width: 640px) {
+  .hero {
+    min-height: 100svh;
+    background-position: center top;
+    background-size: auto 100%;
+  }
+
   .intro {
     width: min(100% - 40px, 760px);
-    padding: 72px 0 88px;
+    margin: 0 auto;
+    padding-top: 46px;
   }
 
   .name-en {
@@ -113,5 +162,14 @@ h1 {
 
   .en {
     font-size: 16px;
+  }
+
+  .links a {
+    min-height: 38px;
+    padding: 0 13px;
+  }
+
+  .scroll-cue {
+    display: none;
   }
 }
