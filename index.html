@@ -5,16 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="刘宇哲 / Yuzhe Liu 的个人主页" />
   <title>刘宇哲 | Yuzhe Liu</title>
-  <link rel="preload" href="avatar_new.jpg?v=20260712h" as="image" />
-  <link rel="stylesheet" href="style.css?v=20260712h" />
-  <script src="script.js?v=20260712h" defer></script>
+  <link rel="preload" href="avatar_new.jpg?v=20260716a" as="image" fetchpriority="high" />
+  <link rel="stylesheet" href="style.css?v=20260716a" />
+  <script src="script.js?v=20260716a" defer></script>
 </head>
 <body data-page="about">
   <main class="site-shell home-shell">
     <div class="hero-bg" aria-hidden="true"></div>
     <div class="hero-vignette" aria-hidden="true"></div>
-    <div class="aurora aurora-a" aria-hidden="true"></div>
-    <div class="aurora aurora-b" aria-hidden="true"></div>
+    <div class="light-grid" aria-hidden="true"></div>
 
     <header class="navbar">
       <a class="brand" href="index.html">Yuzhe Liu</a>
@@ -27,17 +26,27 @@
       </nav>
     </header>
 
-    <section class="hero hero-home" id="about" aria-labelledby="home-title">
+    <section class="home-hero" id="about" aria-labelledby="home-title">
       <div class="hero-copy">
-        <p class="eyebrow">About</p>
-        <h1 id="home-title">刘宇哲</h1>
-        <p class="name-en">Yuzhe Liu</p>
+        <p class="eyebrow">Tsinghua University</p>
+        <h1 id="home-title">
+          <span>Yuzhe Liu</span>
+          <small>刘宇哲</small>
+        </h1>
         <p class="headline">
-          清华大学计算机与金融双学位大二学生，正在 THU College AI ΔI Lab 参与 LLM 与 Transformer 方向研究，也在大模型和量化等方向探索自己的职业志趣。
+          Computer Science and Finance dual-degree undergraduate at Tsinghua University.
+          Researching LLMs and Transformers at THU College AI ΔI Lab.
         </p>
-        <p class="headline headline-en">
-          Undergraduate student in the Computer Science and Finance dual-degree program at Tsinghua University, exploring LLMs, Transformers, and model quantization.
+        <p class="headline muted">
+          Exploring large-scale models, model quantization, and the intersection of intelligence,
+          systems, and markets.
         </p>
+
+        <div class="signal-list" aria-label="Current focus">
+          <span>CS × Finance</span>
+          <span>LLM / Transformer</span>
+          <span>Quantization</span>
+        </div>
 
         <div class="hero-actions">
           <a href="https://github.com/yz-liu-creater" target="_blank" rel="noreferrer">GitHub</a>
@@ -45,32 +54,28 @@
         </div>
       </div>
 
-      <aside class="hero-side home-launcher" aria-label="Page launcher">
-        <p class="panel-kicker">Pages</p>
-        <h2>Open the four pages</h2>
-        <p class="hero-side-copy">
-          Researchs、Projects、Blogs、Contact 都是独立页面。你以后要补内容，直接进对应页面填就行。
-        </p>
-
-        <div class="launch-list">
-          <a class="launch-item" href="researchs.html">
-            <strong>Researchs</strong>
-            <small>Papers, notes, and experiments.</small>
-          </a>
-          <a class="launch-item" href="projects.html">
-            <strong>Projects</strong>
-            <small>Repos, demos, and tools.</small>
-          </a>
-          <a class="launch-item" href="blogs.html">
-            <strong>Blogs</strong>
-            <small>Posts, drafts, and archives.</small>
-          </a>
-          <a class="launch-item" href="contact.html">
-            <strong>Contact</strong>
-            <small>Friend links live here.</small>
-          </a>
-        </div>
-      </aside>
+      <nav class="portal-grid" aria-label="Page launcher">
+        <a class="portal-card" href="researchs.html">
+          <span class="portal-index">01</span>
+          <span class="portal-title">Researchs</span>
+          <span class="portal-copy">Publications and research notes after release.</span>
+        </a>
+        <a class="portal-card" href="projects.html">
+          <span class="portal-index">02</span>
+          <span class="portal-title">Projects</span>
+          <span class="portal-copy">Selected repos, demos, and tools.</span>
+        </a>
+        <a class="portal-card" href="blogs.html">
+          <span class="portal-index">03</span>
+          <span class="portal-title">Blogs</span>
+          <span class="portal-copy">Essays, notes, and longer thoughts.</span>
+        </a>
+        <a class="portal-card" href="contact.html">
+          <span class="portal-index">04</span>
+          <span class="portal-title">Contact</span>
+          <span class="portal-copy">Friend links and public connections.</span>
+        </a>
+      </nav>
     </section>
   </main>
 </body>
