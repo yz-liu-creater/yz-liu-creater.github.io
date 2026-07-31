@@ -46,7 +46,7 @@ const translations = {
     "page.blogs.title": "Blogs",
     "page.blogs.subtitle": "Essays, notes, and longer thoughts will live here.",
     "page.contact.eyebrow": "Contact",
-    "page.contact.title": "Friend Links",
+    "page.contact.title": "Contact",
     "page.contact.subtitle": "A quiet page for public friend links, personal sites, and blogs.",
     "entry.researchs.status": "Under Review",
     "entry.researchs.title": "A mysterious AAAI submission",
