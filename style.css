@@ -629,11 +629,11 @@ html[data-theme="dark"] {
   --ink-soft: rgba(231, 241, 255, 0.76);
   --panel: rgba(8, 17, 31, 0.56);
   --panel-strong: rgba(11, 24, 43, 0.74);
-  --line: rgba(179, 225, 255, 0.2);
-  --line-dark: rgba(180, 224, 255, 0.14);
-  --accent: #47d7ff;
-  --accent-2: #ff6bb5;
-  --accent-3: #7dffcf;
+  --line: rgba(246, 216, 174, 0.2);
+  --line-dark: rgba(246, 216, 174, 0.14);
+  --accent: #f0b34f;
+  --accent-2: #c94630;
+  --accent-3: #ffd27a;
   --shadow: 0 28px 76px rgba(0, 0, 0, 0.38);
 }
 
@@ -644,13 +644,12 @@ html[data-theme="dark"] body {
 
 html[data-theme="dark"] .hero-bg {
   background:
-    linear-gradient(90deg, transparent 11%, rgba(71, 215, 255, 0.34) 11.1%, transparent 11.32%),
-    linear-gradient(90deg, transparent 32%, rgba(255, 107, 181, 0.3) 32.1%, transparent 32.28%),
-    linear-gradient(90deg, transparent 68%, rgba(71, 215, 255, 0.28) 68.1%, transparent 68.3%),
-    linear-gradient(90deg, transparent 87%, rgba(255, 107, 181, 0.26) 87.1%, transparent 87.26%),
-    linear-gradient(118deg, rgba(71, 215, 255, 0.12) 0%, transparent 30%),
-    linear-gradient(242deg, rgba(255, 107, 181, 0.12) 0%, transparent 34%),
-    linear-gradient(180deg, #050914 0%, #071225 52%, #0b1830 100%);
+    linear-gradient(90deg, transparent 12%, rgba(240, 179, 79, 0.3) 12.1%, transparent 12.28%),
+    linear-gradient(90deg, transparent 34%, rgba(201, 70, 48, 0.32) 34.1%, transparent 34.3%),
+    linear-gradient(90deg, transparent 72%, rgba(240, 179, 79, 0.24) 72.1%, transparent 72.28%),
+    linear-gradient(118deg, rgba(201, 70, 48, 0.14) 0%, transparent 34%),
+    linear-gradient(242deg, rgba(240, 179, 79, 0.12) 0%, transparent 38%),
+    linear-gradient(180deg, #050812 0%, #0b101d 50%, #181318 100%);
 }
 
 html[data-theme="dark"] .hero-bg::before {
@@ -658,31 +657,31 @@ html[data-theme="dark"] .hero-bg::before {
   height: 56%;
   opacity: 0.96;
   background:
-    linear-gradient(to top, #07111f 0 100%) 0 100% / 10% 48% no-repeat,
-    linear-gradient(to top, #0c2339 0 100%) 9% 100% / 8% 70% no-repeat,
-    linear-gradient(to top, #09182b 0 100%) 16% 100% / 13% 40% no-repeat,
-    linear-gradient(to top, #102b43 0 100%) 28% 100% / 9% 82% no-repeat,
-    linear-gradient(to top, #081526 0 100%) 36% 100% / 15% 54% no-repeat,
-    linear-gradient(to top, #0d263d 0 100%) 50% 100% / 8% 74% no-repeat,
-    linear-gradient(to top, #091a2f 0 100%) 57% 100% / 14% 45% no-repeat,
-    linear-gradient(to top, #102c45 0 100%) 70% 100% / 11% 66% no-repeat,
-    linear-gradient(to top, #081728 0 100%) 80% 100% / 9% 50% no-repeat,
-    linear-gradient(to top, #0d263e 0 100%) 88% 100% / 12% 78% no-repeat;
-  filter: drop-shadow(0 -1px 7px rgba(71, 215, 255, 0.12));
+    linear-gradient(154deg, transparent 0 46%, #171218 47% 100%) 0 100% / 19% 62% no-repeat,
+    linear-gradient(206deg, transparent 0 46%, #24161a 47% 100%) 16% 100% / 18% 76% no-repeat,
+    linear-gradient(154deg, transparent 0 46%, #1b1419 47% 100%) 31% 100% / 21% 54% no-repeat,
+    linear-gradient(206deg, transparent 0 46%, #29191b 47% 100%) 49% 100% / 19% 72% no-repeat,
+    linear-gradient(154deg, transparent 0 46%, #1a1318 47% 100%) 65% 100% / 20% 58% no-repeat,
+    linear-gradient(206deg, transparent 0 46%, #261719 47% 100%) 82% 100% / 18% 78% no-repeat;
+  filter: drop-shadow(0 -1px 9px rgba(201, 70, 48, 0.16));
   mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 100%);
 }
 
 html[data-theme="dark"] .hero-bg::after {
   right: -8%;
-  bottom: -8%;
+  bottom: -5%;
   left: -8%;
-  height: 48%;
+  height: 42%;
   background:
-    repeating-linear-gradient(90deg, transparent 0 38px, rgba(71, 215, 255, 0.26) 39px 41px, transparent 42px 82px),
-    repeating-linear-gradient(180deg, transparent 0 30px, rgba(255, 107, 181, 0.16) 31px 33px, transparent 34px 66px),
-    linear-gradient(180deg, transparent 0%, rgba(71, 215, 255, 0.08) 48%, rgba(255, 107, 181, 0.12) 100%);
-  transform: perspective(520px) rotateX(66deg) translateY(28%);
-  transform-origin: center bottom;
+    linear-gradient(#b93628 0 100%) 13% 18% / 10px 24px no-repeat,
+    linear-gradient(#e8a844 0 100%) 29% 40% / 12px 17px no-repeat,
+    linear-gradient(#c83f2c 0 100%) 53% 24% / 10px 22px no-repeat,
+    linear-gradient(#f0b34f 0 100%) 75% 44% / 13px 18px no-repeat,
+    linear-gradient(#b93628 0 100%) 89% 19% / 9px 23px no-repeat,
+    repeating-linear-gradient(105deg, transparent 0 72px, rgba(240, 179, 79, 0.1) 73px 75px, transparent 76px 148px),
+    linear-gradient(180deg, transparent 0%, rgba(201, 70, 48, 0.08) 48%, rgba(240, 179, 79, 0.14) 100%);
+  transform: skewY(-3deg);
+  transform-origin: center;
 }
 
 html[data-theme="dark"] .hero-vignette {
@@ -692,17 +691,17 @@ html[data-theme="dark"] .hero-vignette {
 }
 
 html[data-theme="dark"] .light-grid {
-  opacity: 0.28;
+  opacity: 0.18;
   background:
-    linear-gradient(rgba(71, 215, 255, 0.12) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 107, 181, 0.1) 1px, transparent 1px);
+    linear-gradient(rgba(240, 179, 79, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201, 70, 48, 0.08) 1px, transparent 1px);
   background-size: 128px 128px, 128px 128px;
 }
 
 html[data-theme="dark"] .navbar,
 html[data-theme="dark"] .site-shell.is-scrolled .navbar {
   background: rgba(7, 14, 28, 0.62);
-  border-color: rgba(178, 224, 255, 0.18);
+  border-color: rgba(246, 216, 174, 0.18);
   box-shadow: 0 22px 54px rgba(0, 0, 0, 0.34), inset 0 1px rgba(255, 255, 255, 0.04);
 }
 
@@ -714,22 +713,22 @@ html[data-theme="dark"] .nav-links a.active {
 }
 
 html[data-theme="dark"] .nav-links a::after {
-  box-shadow: 0 0 14px rgba(71, 215, 255, 0.48);
+  box-shadow: 0 0 14px rgba(240, 179, 79, 0.4);
 }
 
 html[data-theme="dark"] .lang-switch,
 html[data-theme="dark"] .theme-toggle {
   color: rgba(236, 246, 255, 0.8);
   background: rgba(12, 26, 46, 0.64);
-  border-color: rgba(178, 224, 255, 0.18);
+  border-color: rgba(246, 216, 174, 0.18);
 }
 
 html[data-theme="dark"] .theme-toggle:hover,
 html[data-theme="dark"] .theme-toggle[aria-pressed="true"] {
-  color: #07111f;
-  background: #7de3ff;
-  border-color: rgba(125, 227, 255, 0.7);
-  box-shadow: 0 0 22px rgba(71, 215, 255, 0.28);
+  color: #21120a;
+  background: #f0b34f;
+  border-color: rgba(255, 210, 122, 0.72);
+  box-shadow: 0 0 22px rgba(240, 179, 79, 0.24);
 }
 
 html[data-theme="dark"] .lang-option {
@@ -738,9 +737,9 @@ html[data-theme="dark"] .lang-option {
 
 html[data-theme="dark"] .lang-option:hover,
 html[data-theme="dark"] .lang-option.active {
-  color: #06101e;
-  background: #7de3ff;
-  box-shadow: 0 0 20px rgba(71, 215, 255, 0.24);
+  color: #21120a;
+  background: #f0b34f;
+  box-shadow: 0 0 20px rgba(240, 179, 79, 0.22);
 }
 
 html[data-theme="dark"] h1,
@@ -749,7 +748,7 @@ html[data-theme="dark"] .headline,
 html[data-theme="dark"] .empty-panel h2,
 html[data-theme="dark"] .entry-panel h2 {
   color: #f3f8ff;
-  text-shadow: 0 0 24px rgba(71, 215, 255, 0.12);
+  text-shadow: 0 0 24px rgba(240, 179, 79, 0.1);
 }
 
 html[data-theme="dark"] h1 small,
@@ -764,31 +763,31 @@ html[data-theme="dark"] .signal-list span,
 html[data-theme="dark"] .entry-kicker {
   color: rgba(235, 246, 255, 0.86);
   background: rgba(9, 24, 43, 0.64);
-  border-color: rgba(178, 224, 255, 0.18);
+  border-color: rgba(246, 216, 174, 0.18);
 }
 
 html[data-theme="dark"] .hero-actions a {
-  color: #06101e;
-  background: #7de3ff;
-  border-color: rgba(210, 246, 255, 0.46);
-  box-shadow: 0 14px 34px rgba(71, 215, 255, 0.18);
+  color: #21120a;
+  background: #f0b34f;
+  border-color: rgba(255, 220, 150, 0.48);
+  box-shadow: 0 14px 34px rgba(240, 179, 79, 0.16);
 }
 
 html[data-theme="dark"] .hero-actions a:hover {
   color: #fff;
-  background: #d84d9c;
-  box-shadow: 0 18px 42px rgba(255, 107, 181, 0.24);
+  background: #b93628;
+  box-shadow: 0 18px 42px rgba(201, 70, 48, 0.24);
 }
 
 html[data-theme="dark"] .portal-card {
-  background: linear-gradient(145deg, rgba(8, 18, 34, 0.8), rgba(10, 26, 46, 0.6));
-  border-color: rgba(178, 224, 255, 0.16);
+  background: linear-gradient(145deg, rgba(24, 18, 25, 0.82), rgba(39, 23, 24, 0.6));
+  border-color: rgba(246, 216, 174, 0.16);
   box-shadow: 0 24px 58px rgba(0, 0, 0, 0.36);
 }
 
 html[data-theme="dark"] .portal-index {
-  color: #07111f;
-  background: #7de3ff;
+  color: #21120a;
+  background: #f0b34f;
 }
 
 html[data-theme="dark"] .portal-copy {
@@ -799,26 +798,26 @@ html[data-theme="dark"] .empty-panel,
 html[data-theme="dark"] .entry-panel {
   color: #f3f8ff;
   background:
-    linear-gradient(145deg, rgba(11, 24, 43, 0.72), rgba(7, 16, 31, 0.54)),
-    linear-gradient(90deg, rgba(71, 215, 255, 0.08), rgba(255, 107, 181, 0.06));
-  border-color: rgba(178, 224, 255, 0.18);
+    linear-gradient(145deg, rgba(28, 20, 25, 0.74), rgba(15, 15, 24, 0.58)),
+    linear-gradient(90deg, rgba(240, 179, 79, 0.08), rgba(201, 70, 48, 0.07));
+  border-color: rgba(246, 216, 174, 0.18);
   box-shadow: 0 28px 72px rgba(0, 0, 0, 0.38), inset 0 1px rgba(255, 255, 255, 0.04);
 }
 
 html[data-theme="dark"] .empty-index {
-  color: #07111f;
-  background: rgba(125, 227, 255, 0.88);
-  border-color: rgba(125, 227, 255, 0.52);
+  color: #21120a;
+  background: rgba(240, 179, 79, 0.9);
+  border-color: rgba(255, 210, 122, 0.56);
 }
 
 html[data-theme="dark"] .entry-index {
-  color: #06101e;
-  background: linear-gradient(145deg, #7de3ff, #ff75bb);
+  color: #fff8eb;
+  background: linear-gradient(145deg, #c94630, #8f2e24);
   border-color: rgba(255, 255, 255, 0.24);
 }
 
 html[data-theme="dark"] .project-link {
-  color: #7de3ff;
+  color: #f0b34f;
 }
 
 @keyframes enter-up {
