@@ -621,6 +621,28 @@ h1 small {
   line-height: 1.72;
 }
 
+html:not([data-theme="dark"]) .hero-bg {
+  background-color: #b9dcf3;
+  background-image: url("assets/altay-day-bokeh.webp");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  filter: blur(8px) saturate(1.08);
+}
+
+html:not([data-theme="dark"]) .hero-bg::before,
+html:not([data-theme="dark"]) .hero-bg::after {
+  display: none;
+}
+
+html:not([data-theme="dark"]) .hero-vignette {
+  background: rgba(244, 250, 255, 0.12);
+}
+
+html:not([data-theme="dark"]) .light-grid {
+  display: none;
+}
+
 html[data-theme="dark"] {
   color-scheme: dark;
   --bg: #050914;
