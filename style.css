@@ -627,7 +627,6 @@ html:not([data-theme="dark"]) .hero-bg {
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
-  filter: blur(8px) saturate(1.08);
 }
 
 html:not([data-theme="dark"]) .hero-bg::before,
