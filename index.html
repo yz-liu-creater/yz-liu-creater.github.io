@@ -5,10 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="刘宇哲 / Yuzhe Liu 的个人主页" />
   <title>刘宇哲 | Yuzhe Liu</title>
-  <link rel="stylesheet" href="style.css?v=20260716d" />
-  <script src="script.js?v=20260716d" defer></script>
+  <link rel="stylesheet" href="style.css?v=20260731a" />
+  <script src="script.js?v=20260731a" defer></script>
 </head>
-<body data-page="about">
+<body
+  data-page="about"
+  data-title-en="Yuzhe Liu | Personal Website"
+  data-title-zh="刘宇哲 | 个人主页"
+  data-description-en="Personal website of Yuzhe Liu, a Computer Science and Finance undergraduate at Tsinghua University."
+  data-description-zh="刘宇哲 / Yuzhe Liu 的个人主页"
+>
   <main class="site-shell home-shell">
     <div class="hero-bg" aria-hidden="true"></div>
     <div class="hero-vignette" aria-hidden="true"></div>
@@ -16,63 +22,69 @@
 
     <header class="navbar">
       <a class="brand" href="index.html">Yuzhe Liu</a>
-      <nav class="nav-links" aria-label="Primary navigation">
-        <a href="index.html" data-nav="about">About</a>
-        <a href="researchs.html" data-nav="researchs">Researchs</a>
-        <a href="projects.html" data-nav="projects">Projects</a>
-        <a href="blogs.html" data-nav="blogs">Blogs</a>
-        <a href="contact.html" data-nav="contact">Contact</a>
-      </nav>
+      <div class="nav-cluster">
+        <nav class="nav-links" aria-label="Primary navigation">
+          <a href="index.html" data-nav="about" data-i18n="nav.about">About</a>
+          <a href="researchs.html" data-nav="researchs" data-i18n="nav.researchs">Researchs</a>
+          <a href="projects.html" data-nav="projects" data-i18n="nav.projects">Projects</a>
+          <a href="blogs.html" data-nav="blogs" data-i18n="nav.blogs">Blogs</a>
+          <a href="contact.html" data-nav="contact" data-i18n="nav.contact">Contact</a>
+        </nav>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button class="lang-option" type="button" data-lang="en">EN</button>
+          <button class="lang-option" type="button" data-lang="zh">中</button>
+        </div>
+      </div>
     </header>
 
     <section class="home-hero" id="about" aria-labelledby="home-title">
       <div class="hero-copy">
-        <p class="eyebrow">Tsinghua University</p>
+        <p class="eyebrow" data-i18n="home.eyebrow">Tsinghua University</p>
         <h1 id="home-title">
           <span>Yuzhe Liu</span>
-          <small>刘宇哲</small>
+          <small class="chinese-name">刘宇哲</small>
         </h1>
-        <p class="headline">
+        <p class="headline" data-i18n="home.headline">
           Computer Science and Finance dual-degree undergraduate at Tsinghua University.
           Researching LLMs and Transformers at THU College AI ΔI Lab.
         </p>
-        <p class="headline muted">
+        <p class="headline muted" data-i18n="home.muted">
           Exploring large-scale models, model quantization, and the intersection of intelligence,
           systems, and markets.
         </p>
 
         <div class="signal-list" aria-label="Current focus">
-          <span>CS × Finance</span>
-          <span>LLM / Transformer</span>
-          <span>Quantization</span>
+          <span data-i18n="home.signal.degree">CS × Finance</span>
+          <span data-i18n="home.signal.llm">LLM / Transformer</span>
+          <span data-i18n="home.signal.quant">Quantization</span>
         </div>
 
         <div class="hero-actions">
           <a href="https://github.com/yz-liu-creater" target="_blank" rel="noreferrer">GitHub</a>
-          <a href="https://mail.google.com/mail/?view=cm&fs=1&to=liuyuzhe473%40gmail.com" target="_blank" rel="noreferrer">Email</a>
+          <a href="https://mail.google.com/mail/?view=cm&fs=1&to=liuyuzhe473%40gmail.com" target="_blank" rel="noreferrer" data-i18n="action.email">Email</a>
         </div>
       </div>
 
       <nav class="portal-grid" aria-label="Page launcher">
         <a class="portal-card" href="researchs.html">
           <span class="portal-index">01</span>
-          <span class="portal-title">Researchs</span>
-          <span class="portal-copy">Publications and research notes after release.</span>
+          <span class="portal-title" data-i18n="portal.researchs.title">Researchs</span>
+          <span class="portal-copy" data-i18n="portal.researchs.copy">Publications and research notes after release.</span>
         </a>
         <a class="portal-card" href="projects.html">
           <span class="portal-index">02</span>
-          <span class="portal-title">Projects</span>
-          <span class="portal-copy">Selected repos, demos, and tools.</span>
+          <span class="portal-title" data-i18n="portal.projects.title">Projects</span>
+          <span class="portal-copy" data-i18n="portal.projects.copy">Selected repos, demos, and tools.</span>
         </a>
         <a class="portal-card" href="blogs.html">
           <span class="portal-index">03</span>
-          <span class="portal-title">Blogs</span>
-          <span class="portal-copy">Essays, notes, and longer thoughts.</span>
+          <span class="portal-title" data-i18n="portal.blogs.title">Blogs</span>
+          <span class="portal-copy" data-i18n="portal.blogs.copy">Essays, notes, and longer thoughts.</span>
         </a>
         <a class="portal-card" href="contact.html">
           <span class="portal-index">04</span>
-          <span class="portal-title">Contact</span>
-          <span class="portal-copy">Friend links and public connections.</span>
+          <span class="portal-title" data-i18n="portal.contact.title">Contact</span>
+          <span class="portal-copy" data-i18n="portal.contact.copy">Friend links and public connections.</span>
         </a>
       </nav>
     </section>
