@@ -2,6 +2,7 @@ const root = document.documentElement;
 const shell = document.querySelector(".site-shell");
 const navLinks = Array.from(document.querySelectorAll(".nav-links a[data-nav]"));
 const languageButtons = Array.from(document.querySelectorAll(".lang-option[data-lang]"));
+const themeButton = document.querySelector("[data-theme-toggle]");
 const translatableNodes = Array.from(document.querySelectorAll("[data-i18n]"));
 const metaDescription = document.querySelector('meta[name="description"]');
 const currentPage = document.body.dataset.page || "about";
@@ -9,6 +10,9 @@ const currentPage = document.body.dataset.page || "about";
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const languageStorageKey = "yuzhe-site-language";
 const supportedLanguages = ["en", "zh"];
+const themeStorageKey = "yuzhe-site-theme";
+const supportedThemes = ["light", "dark"];
+let currentTheme = "light";
 
 const translations = {
   en: {
@@ -18,6 +22,8 @@ const translations = {
     "nav.blogs": "Blogs",
     "nav.contact": "Contact",
     "action.email": "Email",
+    "theme.toDark": "Switch to dark theme",
+    "theme.toLight": "Switch to light theme",
     "home.eyebrow": "Tsinghua University",
     "home.headline": "Computer Science and Finance dual-degree undergraduate at Tsinghua University. Researching LLMs and Transformers at THU College AI ΔI Lab.",
     "home.muted": "Exploring large-scale models, model quantization, and the intersection of intelligence, systems, and markets.",
@@ -64,6 +70,8 @@ const translations = {
     "nav.blogs": "博客",
     "nav.contact": "友链",
     "action.email": "邮箱",
+    "theme.toDark": "切换到深色模式",
+    "theme.toLight": "切换到浅色模式",
     "home.eyebrow": "清华大学",
     "home.headline": "清华大学计算机与金融双学位本科生，目前在 THU College AI ΔI Lab 从事 LLM 和 Transformer 相关研究。",
     "home.muted": "关注大模型、模型量化，以及智能系统与市场的交叉方向。",
@@ -107,6 +115,63 @@ const translations = {
 
 function normalizeLanguage(language) {
   return supportedLanguages.includes(language) ? language : "en";
+}
+
+function normalizeTheme(theme) {
+  return supportedThemes.includes(theme) ? theme : "light";
+}
+
+function getStoredTheme() {
+  try {
+    return localStorage.getItem(themeStorageKey);
+  } catch (error) {
+    return null;
+  }
+}
+
+function setStoredTheme(theme) {
+  try {
+    localStorage.setItem(themeStorageKey, theme);
+  } catch (error) {
+    // Storage can be unavailable in restricted contexts.
+  }
+}
+
+function getInitialTheme() {
+  const storedTheme = getStoredTheme();
+
+  if (supportedThemes.includes(storedTheme)) {
+    return storedTheme;
+  }
+
+  return normalizeTheme(root.dataset.theme);
+}
+
+function updateThemeControl(language = document.body.dataset.language || "en") {
+  if (!themeButton) return;
+
+  const isDark = currentTheme === "dark";
+  const strings = translations[normalizeLanguage(language)];
+  const label = strings[isDark ? "theme.toLight" : "theme.toDark"];
+  const icon = themeButton.querySelector(".theme-icon");
+
+  themeButton.setAttribute("aria-label", label);
+  themeButton.setAttribute("title", label);
+  themeButton.setAttribute("aria-pressed", String(isDark));
+
+  if (icon) {
+    icon.textContent = isDark ? "☀" : "☾";
+  }
+}
+
+function applyTheme(theme, shouldPersist = true) {
+  currentTheme = normalizeTheme(theme);
+  root.dataset.theme = currentTheme;
+  updateThemeControl();
+
+  if (shouldPersist) {
+    setStoredTheme(currentTheme);
+  }
 }
 
 function getStoredLanguage() {
@@ -200,6 +265,8 @@ function applyLanguage(language, shouldPersist = true) {
     button.setAttribute("aria-pressed", String(isActive));
   });
 
+  updateThemeControl(selectedLanguage);
+
   if (shouldPersist) {
     setStoredLanguage(selectedLanguage);
   }
@@ -208,8 +275,12 @@ function applyLanguage(language, shouldPersist = true) {
 languageButtons.forEach((button) => {
   button.addEventListener("click", () => applyLanguage(button.dataset.lang));
 });
+themeButton?.addEventListener("click", () => {
+  applyTheme(currentTheme === "dark" ? "light" : "dark");
+});
 window.addEventListener("pointermove", setPointerPosition, { passive: true });
 window.addEventListener("scroll", handleScroll, { passive: true });
 handleScroll();
 setActiveNav(currentPage);
+applyTheme(getInitialTheme(), false);
 applyLanguage(getInitialLanguage(), false);
