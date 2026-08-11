@@ -522,6 +522,48 @@ h1 small {
   text-wrap: balance;
 }
 
+.research-entry {
+  cursor: default;
+}
+
+.research-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.research-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 13px;
+  color: var(--accent);
+  background: rgba(255, 255, 255, 0.48);
+  border: 1px solid rgba(13, 122, 178, 0.24);
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 760;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.research-action:hover {
+  color: #f7fbff;
+  background: rgba(13, 122, 178, 0.94);
+  border-color: rgba(13, 122, 178, 0.94);
+  transform: translateY(-1px);
+}
+
+.research-action-primary {
+  color: #f7fbff;
+  background: rgba(8, 20, 33, 0.82);
+  border-color: rgba(8, 20, 33, 0.82);
+}
+
 .empty-panel,
 .entry-panel {
   display: grid;
@@ -838,6 +880,19 @@ html[data-theme="dark"] .project-link {
   color: #f0b34f;
 }
 
+html[data-theme="dark"] .research-action {
+  color: #f0b34f;
+  background: rgba(9, 24, 43, 0.64);
+  border-color: rgba(246, 216, 174, 0.2);
+}
+
+html[data-theme="dark"] .research-action:hover,
+html[data-theme="dark"] .research-action-primary {
+  color: #21120a;
+  background: #f0b34f;
+  border-color: #f0b34f;
+}
+
 @keyframes enter-up {
   from {
     opacity: 0;
@@ -953,6 +1008,10 @@ html[data-theme="dark"] .project-link {
   .project-link {
     justify-self: start;
     white-space: normal;
+  }
+
+  .research-actions {
+    justify-content: flex-start;
   }
 
   .empty-index,

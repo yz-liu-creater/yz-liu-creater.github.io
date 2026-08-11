@@ -13,8 +13,8 @@
   </script>
   <meta name="description" content="刘宇哲 / Yuzhe Liu 的 Researchs 页面" />
   <title>Researchs | 刘宇哲</title>
-  <link rel="stylesheet" href="style.css?v=20260731l" />
-  <script src="script.js?v=20260810a" defer></script>
+  <link rel="stylesheet" href="style.css?v=20260812a" />
+  <script src="script.js?v=20260812a" defer></script>
 </head>
 <body
   data-page="researchs"
@@ -56,7 +56,7 @@
         </p>
       </div>
 
-      <a class="entry-panel project-entry research-entry" href="https://arxiv.org/abs/2608.07001" target="_blank" rel="noreferrer">
+      <article class="entry-panel project-entry research-entry">
         <span class="entry-index">01</span>
         <div>
           <h2 data-i18n="entry.researchs.title">Every Cache Entry Earns Its Place: Global Allocation of Resolution and Coverage for KV Cache Compression</h2>
@@ -64,8 +64,11 @@
             As a co-first author, I helped develop GraceKV, which formulates KV cache compression under a fixed cache budget as a global resource allocation problem, adaptively balancing information coverage and local resolution across layers, KV heads, and context positions. It requires no additional training, runs entirely on GPU, and remains robust at compression ratios of up to 128x across diverse long-context tasks.
           </p>
         </div>
-        <span class="project-link" data-i18n="entry.researchs.link">View paper</span>
-      </a>
+        <div class="research-actions" aria-label="GraceKV resources">
+          <a class="research-action research-action-primary" href="gracekv/" data-i18n="entry.researchs.project">Project page</a>
+          <a class="research-action" href="https://arxiv.org/abs/2608.07001" target="_blank" rel="noreferrer" data-i18n="entry.researchs.paper">Paper</a>
+        </div>
+      </article>
     </section>
   </main>
 </body>

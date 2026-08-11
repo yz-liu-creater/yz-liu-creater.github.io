@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f7f9f6" />
+  <meta
+    name="description"
+    content="GraceKV globally allocates KV cache resolution and coverage across layers, heads, and context regions under a shared cache budget."
+  />
+  <meta name="author" content="Haolin Tian, Yuzhe Liu, Tonghan Wang" />
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="GraceKV" />
+  <meta property="og:title" content="GraceKV: Global Allocation for KV Cache Compression" />
+  <meta
+    property="og:description"
+    content="Every cache entry earns its place. Allocate resolution and coverage globally under one shared KV cache budget."
+  />
+  <meta property="og:url" content="https://yz-liu-creater.github.io/gracekv/" />
+  <meta property="og:image" content="https://yz-liu-creater.github.io/gracekv/assets/og-gracekv.webp" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="GraceKV: Global Allocation for KV Cache Compression" />
+  <meta
+    name="twitter:description"
+    content="A global resource allocation approach to KV cache compression, robust up to 128x compression."
+  />
+  <meta name="twitter:image" content="https://yz-liu-creater.github.io/gracekv/assets/og-gracekv.webp" />
+  <link rel="canonical" href="https://yz-liu-creater.github.io/gracekv/" />
+  <link rel="preload" as="image" href="assets/method-overview.webp" fetchpriority="high" />
+  <link rel="stylesheet" href="style.css?v=20260812a" />
+  <script src="script.js?v=20260812a" defer></script>
+  <title>GraceKV | Global Allocation for KV Cache Compression</title>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ScholarlyArticle",
+      "headline": "Every Cache Entry Earns Its Place: Global Allocation of Resolution and Coverage for KV Cache Compression",
+      "name": "GraceKV",
+      "datePublished": "2026-08-07",
+      "identifier": "https://doi.org/10.48550/arXiv.2608.07001",
+      "url": "https://arxiv.org/abs/2608.07001",
+      "license": "https://creativecommons.org/licenses/by/4.0/",
+      "author": [
+        { "@type": "Person", "name": "Haolin Tian" },
+        { "@type": "Person", "name": "Yuzhe Liu" },
+        { "@type": "Person", "name": "Tonghan Wang" }
+      ],
+      "affiliation": {
+        "@type": "CollegeOrUniversity",
+        "name": "Tsinghua University"
+      }
+    }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <svg class="icon-sprite" aria-hidden="true">
+    <symbol id="icon-file-text" viewBox="0 0 24 24">
+      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+      <path d="M14 2v6h6M8 13h8M8 17h8M8 9h2" />
+    </symbol>
+    <symbol id="icon-external" viewBox="0 0 24 24">
+      <path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+    </symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24">
+      <rect width="14" height="14" x="8" y="8" rx="2" />
+      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+    </symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24">
+      <path d="m20 6-11 11-5-5" />
+    </symbol>
+    <symbol id="icon-menu" viewBox="0 0 24 24">
+      <path d="M4 6h16M4 12h16M4 18h16" />
+    </symbol>
+    <symbol id="icon-x" viewBox="0 0 24 24">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </symbol>
+    <symbol id="icon-arrow-down" viewBox="0 0 24 24">
+      <path d="M12 5v14M19 12l-7 7-7-7" />
+    </symbol>
+  </svg>
+
+  <header class="site-header" data-header>
+    <div class="header-inner">
+      <a class="wordmark" href="#top" aria-label="GraceKV home">GraceKV</a>
+
+      <button
+        class="menu-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="site-nav"
+        aria-label="Open navigation"
+        title="Open navigation"
+        data-menu-toggle
+      >
+        <svg class="menu-icon" aria-hidden="true"><use href="#icon-menu"></use></svg>
+        <svg class="close-icon" aria-hidden="true"><use href="#icon-x"></use></svg>
+      </button>
+
+      <nav class="site-nav" id="site-nav" aria-label="Paper navigation" data-site-nav>
+        <a href="#overview" data-section-link="overview">Overview</a>
+        <a href="#method" data-section-link="method">Method</a>
+        <a href="#results" data-section-link="results">Results</a>
+        <a href="#citation" data-section-link="citation">Citation</a>
+      </nav>
+
+      <a
+        class="header-paper"
+        href="https://arxiv.org/pdf/2608.07001"
+        target="_blank"
+        rel="noreferrer"
+      >
+        <svg aria-hidden="true"><use href="#icon-file-text"></use></svg>
+        <span>Paper</span>
+      </a>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="hero-media" aria-hidden="true"></div>
+      <div class="hero-overlay" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <p class="hero-kicker"><span>arXiv 2026</span><span>Machine Learning</span></p>
+        <h1 id="hero-title">GraceKV</h1>
+        <p class="paper-title">
+          Every Cache Entry Earns Its Place: Global Allocation of Resolution and Coverage for KV Cache Compression
+        </p>
+
+        <ul class="author-list" aria-label="Authors">
+          <li>
+            <a href="https://arxiv.org/search/cs?searchtype=author&amp;query=Tian%2C+H" target="_blank" rel="noreferrer">Haolin Tian<sup>*</sup></a>
+          </li>
+          <li><a href="../index.html">Yuzhe Liu<sup>*</sup></a></li>
+          <li>
+            <a href="https://arxiv.org/search/cs?searchtype=author&amp;query=Wang%2C+T" target="_blank" rel="noreferrer">Tonghan Wang<sup>&dagger;</sup></a>
+          </li>
+        </ul>
+        <p class="author-note">* Equal contribution &nbsp; &dagger; Corresponding author</p>
+        <p class="affiliation">Tsinghua University, Beijing, China</p>
+
+        <div class="hero-actions" aria-label="Paper resources">
+          <a class="action action-primary" href="https://arxiv.org/pdf/2608.07001" target="_blank" rel="noreferrer">
+            <svg aria-hidden="true"><use href="#icon-file-text"></use></svg>
+            <span>Read paper</span>
+          </a>
+          <a class="action action-secondary" href="https://arxiv.org/html/2608.07001v1" target="_blank" rel="noreferrer">
+            <span>arXiv HTML</span>
+            <svg aria-hidden="true"><use href="#icon-external"></use></svg>
+          </a>
+          <button class="action action-secondary" type="button" data-copy-citation>
+            <svg aria-hidden="true"><use href="#icon-copy"></use></svg>
+            <span data-copy-label>Copy BibTeX</span>
+          </button>
+        </div>
+      </div>
+
+      <a class="hero-jump" href="#overview" aria-label="Continue to overview" title="Continue to overview">
+        <svg aria-hidden="true"><use href="#icon-arrow-down"></use></svg>
+      </a>
+    </section>
+
+    <section class="signal-band" aria-label="GraceKV highlights">
+      <div class="signal-inner">
+        <div class="signal-item">
+          <strong>Global</strong>
+          <span>One budget across layers, heads, and slots</span>
+        </div>
+        <div class="signal-item">
+          <strong>128&times;</strong>
+          <span>Robust under severe compression</span>
+        </div>
+        <div class="signal-item">
+          <strong>Zero</strong>
+          <span>Additional training or model passes</span>
+        </div>
+        <div class="signal-item">
+          <strong>GPU</strong>
+          <span>Compression and inference stay on device</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section overview-section" id="overview" aria-labelledby="overview-title">
+      <div class="section-inner">
+        <div class="section-heading heading-grid">
+          <div>
+            <p class="section-label">Overview</p>
+            <h2 id="overview-title">Compression is an allocation problem.</h2>
+          </div>
+          <p class="section-lead">
+            Fixed rules decide the representation before they know where the cache matters. GraceKV reverses that order: every candidate cache entry competes for one shared physical-entry budget.
+          </p>
+        </div>
+
+        <div class="tradeoff-grid">
+          <article class="tradeoff-card eviction-card">
+            <p class="card-label">Token eviction</p>
+            <h3>Precise where retained</h3>
+            <p>Original entries stay exact, but unselected context disappears from later attention.</p>
+          </article>
+          <article class="tradeoff-card merging-card">
+            <p class="card-label">KV merging</p>
+            <h3>Broad but coarse</h3>
+            <p>More context remains visible, while fixed prototypes can erase local detail.</p>
+          </article>
+          <article class="tradeoff-card grace-card">
+            <p class="card-label">GraceKV</p>
+            <h3>Coverage and resolution</h3>
+            <p>The cache budget flows toward the layer, head, region, and resolution with the highest marginal utility.</p>
+          </article>
+        </div>
+
+        <figure class="paper-figure allocation-figure">
+          <img
+            src="assets/allocation-case.webp"
+            width="2000"
+            height="792"
+            alt="GraceKV allocation case showing evidence tokens retained at fine resolution, background regions compressed, and cache entries distributed across layers and KV heads."
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>
+            GraceKV preserves high-value evidence at fine resolution while compressing distant background context more aggressively. Figure 1 from the paper.
+          </figcaption>
+        </figure>
+
+        <div class="abstract-block">
+          <p class="section-label">Abstract</p>
+          <p>
+            As large language models process increasingly long contexts, KV cache storage and repeated access become a major bottleneck. GraceKV formulates compression as global resource allocation under a fixed cache budget. Each layer-KV-head-slot combination receives a progressively refinable prototype tree: adding a root expands coverage, while splitting a selected node improves local resolution. Candidate actions compete globally, allowing the final cache to adapt across model components and context regions. The method needs no additional training, runs entirely on the GPU, and remains robust at compression ratios up to 128&times; across diverse long-context tasks.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section method-section" id="method" aria-labelledby="method-title">
+      <div class="section-inner">
+        <div class="section-heading heading-grid method-heading">
+          <div>
+            <p class="section-label">Method</p>
+            <h2 id="method-title">Shape the cache, price each refinement, spend globally.</h2>
+          </div>
+          <p class="section-lead">
+            A unified tree representation turns coverage and resolution into comparable actions. Value flows upward through every tree; budget flows to the most useful action across all trees.
+          </p>
+        </div>
+
+        <figure class="paper-figure method-figure">
+          <img
+            src="assets/method-overview.webp"
+            width="2000"
+            height="864"
+            alt="GraceKV method overview with curvature-guided prototype trees, global budget flow, and a value flow combining attention distortion, multi-hop relevance, and head sensitivity."
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>
+            Curvature-guided trees expose Add and Split operations to one global utility-ranked budget flow. Figure 2 from the paper.
+          </figcaption>
+        </figure>
+
+        <ol class="method-steps">
+          <li>
+            <span class="step-index">01</span>
+            <div>
+              <h3>Build refinable trees</h3>
+              <p>Curvature and token surprisal define semantic slots. Leaves preserve exact K/V pairs; internal nodes represent contiguous spans with weighted prototypes.</p>
+            </div>
+          </li>
+          <li>
+            <span class="step-index">02</span>
+            <div>
+              <h3>Estimate marginal utility</h3>
+              <p>Direct and multi-hop relevance, attention distortion, and head sensitivity determine the value of adding coverage or increasing resolution.</p>
+            </div>
+          </li>
+          <li>
+            <span class="step-index">03</span>
+            <div>
+              <h3>Allocate one shared budget</h3>
+              <p>Add and Split actions from every layer, KV head, and slot enter a global priority queue. The highest-return action wins each physical cache entry.</p>
+            </div>
+          </li>
+        </ol>
+
+        <div class="operation-band" aria-label="GraceKV allocation operations">
+          <div>
+            <span class="operation-mark add-mark">Add</span>
+            <p>Admit a new root prototype to extend information coverage.</p>
+          </div>
+          <div>
+            <span class="operation-mark split-mark">Split</span>
+            <p>Replace a prototype with its children to increase local resolution.</p>
+          </div>
+          <div>
+            <span class="operation-mark floor-mark">Floor</span>
+            <p>Keep a small set of high-value singletons exact under the same budget.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section results-section" id="results" aria-labelledby="results-title">
+      <div class="section-inner">
+        <div class="section-heading heading-grid">
+          <div>
+            <p class="section-label">Results</p>
+            <h2 id="results-title">Competitive from 4&times; through 128&times;.</h2>
+          </div>
+          <p class="section-lead">
+            Across LongBench and RULER, global allocation stays stable as budgets tighten. Results below use Qwen2.5-7B-Instruct; the paper reports additional models, ablations, and full baselines.
+          </p>
+        </div>
+
+        <div class="result-stats">
+          <article class="result-stat">
+            <strong>21 / 24</strong>
+            <span>LongBench settings ranked first</span>
+          </article>
+          <article class="result-stat">
+            <strong>76.50</strong>
+            <span>RULER retrieval at a 512-entry budget</span>
+          </article>
+          <article class="result-stat">
+            <strong>128&times;</strong>
+            <span>Highest evaluated LongBench compression ratio</span>
+          </article>
+        </div>
+
+        <div class="table-wrap" role="region" aria-labelledby="benchmark-table-title" tabindex="0">
+          <div class="table-heading">
+            <h3 id="benchmark-table-title">LongBench across cache budgets</h3>
+            <p>F1 for QA; Rouge-L for summarization and few-shot, all &times;100.</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Task</th>
+                <th scope="col">FullKV</th>
+                <th scope="col">4&times;</th>
+                <th scope="col">32&times;</th>
+                <th scope="col">128&times;</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Single-document QA</th>
+                <td>43.95</td>
+                <td><strong>42.97</strong></td>
+                <td><strong>35.57</strong></td>
+                <td><strong>25.81</strong></td>
+              </tr>
+              <tr>
+                <th scope="row">Multi-document QA</th>
+                <td>29.86</td>
+                <td><strong>30.18</strong></td>
+                <td><strong>28.18</strong></td>
+                <td><strong>25.19</strong></td>
+              </tr>
+              <tr>
+                <th scope="row">Summarization</th>
+                <td>15.97</td>
+                <td><strong>15.03</strong></td>
+                <td><strong>13.48</strong></td>
+                <td><strong>11.88</strong></td>
+              </tr>
+              <tr>
+                <th scope="row">Few-shot</th>
+                <td>36.23</td>
+                <td><strong>35.82</strong></td>
+                <td><strong>33.80</strong></td>
+                <td><strong>32.83</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="efficiency-grid">
+          <figure class="efficiency-figure">
+            <img
+              src="assets/efficiency.webp"
+              width="960"
+              height="1314"
+              alt="Plots of KV cache memory and per-token decode latency against context length for FullKV and GraceKV at 4x, 8x, and 16x compression."
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>KV cache memory and decode latency as context grows. Figure 3 from the paper.</figcaption>
+          </figure>
+
+          <div class="efficiency-copy">
+            <p class="section-label">Efficiency at 30K context</p>
+            <h3>Memory falls immediately. Decode cost stays nearly flat.</h3>
+            <dl class="efficiency-metrics">
+              <div>
+                <dt>FullKV</dt>
+                <dd>1.77 GB</dd>
+              </div>
+              <div>
+                <dt>GraceKV at 8&times;</dt>
+                <dd>246 MB</dd>
+              </div>
+              <div>
+                <dt>GraceKV at 16&times;</dt>
+                <dd>137 MB</dd>
+              </div>
+            </dl>
+            <p>
+              At the longest evaluated context, FullKV decoding is up to 1.7&times; slower. GraceKV introduces a one-time cache construction cost after prefill, averaging about 2.35 seconds in the reported single-document QA setup, with roughly 8% temporary peak-memory overhead.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section citation-section" id="citation" aria-labelledby="citation-title">
+      <div class="section-inner citation-grid">
+        <div>
+          <p class="section-label">Citation</p>
+          <h2 id="citation-title">Every cache entry earns its place.</h2>
+          <p class="citation-copy">
+            Tian, Haolin; Liu, Yuzhe; and Wang, Tonghan. 2026. Every Cache Entry Earns Its Place: Global Allocation of Resolution and Coverage for KV Cache Compression. arXiv:2608.07001.
+          </p>
+          <div class="citation-links">
+            <a href="https://doi.org/10.48550/arXiv.2608.07001" target="_blank" rel="noreferrer">
+              DOI
+              <svg aria-hidden="true"><use href="#icon-external"></use></svg>
+            </a>
+            <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">
+              CC BY 4.0
+              <svg aria-hidden="true"><use href="#icon-external"></use></svg>
+            </a>
+          </div>
+        </div>
+
+        <div class="bibtex-block">
+          <div class="bibtex-header">
+            <span>BibTeX</span>
+            <button type="button" data-copy-citation aria-label="Copy BibTeX" title="Copy BibTeX">
+              <svg aria-hidden="true"><use href="#icon-copy"></use></svg>
+              <span data-copy-label>Copy</span>
+            </button>
+          </div>
+          <pre><code id="bibtex">@article{tian2026every,
+  title   = {Every Cache Entry Earns Its Place: Global Allocation of Resolution and Coverage for KV Cache Compression},
+  author  = {Tian, Haolin and Liu, Yuzhe and Wang, Tonghan},
+  journal = {arXiv preprint arXiv:2608.07001},
+  year    = {2026}
+}</code></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <a class="footer-mark" href="#top">GraceKV</a>
+      <p>Haolin Tian, Yuzhe Liu, and Tonghan Wang. Tsinghua University.</p>
+      <nav aria-label="Footer navigation">
+        <a href="../researchs.html">Researchs</a>
+        <a href="https://arxiv.org/abs/2608.07001" target="_blank" rel="noreferrer">arXiv</a>
+        <a href="https://arxiv.org/pdf/2608.07001" target="_blank" rel="noreferrer">PDF</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>
