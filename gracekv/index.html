@@ -27,8 +27,8 @@
   <meta name="twitter:image" content="https://yz-liu-creater.github.io/gracekv/assets/og-gracekv.webp" />
   <link rel="canonical" href="https://yz-liu-creater.github.io/gracekv/" />
   <link rel="preload" as="image" href="assets/method-overview.webp" fetchpriority="high" />
-  <link rel="stylesheet" href="style.css?v=20260812a" />
-  <script src="script.js?v=20260812a" defer></script>
+  <link rel="stylesheet" href="style.css?v=20260812e" />
+  <script src="script.js?v=20260812e" defer></script>
   <title>GraceKV | Global Allocation for KV Cache Compression</title>
   <script type="application/ld+json">
     {
@@ -100,6 +100,7 @@
 
       <nav class="site-nav" id="site-nav" aria-label="Paper navigation" data-site-nav>
         <a href="#overview" data-section-link="overview">Overview</a>
+        <a href="#walkthrough" data-section-link="walkthrough">Walkthrough</a>
         <a href="#method" data-section-link="method">Method</a>
         <a href="#results" data-section-link="results">Results</a>
         <a href="#citation" data-section-link="citation">Citation</a>
@@ -186,51 +187,120 @@
       <div class="section-inner">
         <div class="section-heading heading-grid">
           <div>
-            <p class="section-label">Overview</p>
-            <h2 id="overview-title">Compression is an allocation problem.</h2>
+            <p class="section-label">Core idea</p>
+            <h2 id="overview-title">One budget. Two ways to spend it.</h2>
           </div>
           <p class="section-lead">
-            Fixed rules decide the representation before they know where the cache matters. GraceKV reverses that order: every candidate cache entry competes for one shared physical-entry budget.
+            Under a fixed physical cache budget, the next K/V entry can cover a region that is currently absent, or refine a region that is already represented. GraceKV makes those two choices directly comparable.
           </p>
         </div>
 
-        <div class="tradeoff-grid">
-          <article class="tradeoff-card eviction-card">
-            <p class="card-label">Token eviction</p>
-            <h3>Precise where retained</h3>
-            <p>Original entries stay exact, but unselected context disappears from later attention.</p>
+        <div class="decision-grid">
+          <article class="decision-block coverage-decision">
+            <span class="decision-kicker">Buy coverage</span>
+            <h3>Add a new region</h3>
+            <p>One root prototype makes an entire context slot visible to a particular layer and KV head.</p>
           </article>
-          <article class="tradeoff-card merging-card">
-            <p class="card-label">KV merging</p>
-            <h3>Broad but coarse</h3>
-            <p>More context remains visible, while fixed prototypes can erase local detail.</p>
+          <article class="decision-block resolution-decision">
+            <span class="decision-kicker">Buy resolution</span>
+            <h3>Refine what is already covered</h3>
+            <p>A Split replaces one coarse prototype with its preselected child set, spending extra entries only where detail is worth it.</p>
           </article>
-          <article class="tradeoff-card grace-card">
-            <p class="card-label">GraceKV</p>
-            <h3>Coverage and resolution</h3>
-            <p>The cache budget flows toward the layer, head, region, and resolution with the highest marginal utility.</p>
-          </article>
+          <div class="budget-equation" aria-label="One stored K V pair equals one physical budget unit">
+            <span>1 stored K/V pair</span>
+            <strong>=</strong>
+            <span>1 physical budget unit</span>
+          </div>
+        </div>
+
+        <div class="input-budget" role="img" aria-label="Input layout: prompt and question are retained outside the compression budget; the long context is compressed; a recent context window remains exact and counts toward the budget.">
+          <div class="input-segment prompt-segment">
+            <strong>Prompt</strong>
+            <span>Exact, outside budget</span>
+          </div>
+          <div class="input-segment context-segment">
+            <strong>Compressible long context</strong>
+            <span>Shared Add / Split auction</span>
+          </div>
+          <div class="input-segment recent-segment">
+            <strong>Recent window</strong>
+            <span>Exact, counts toward budget</span>
+          </div>
+          <div class="input-segment question-segment">
+            <strong>Question + suffix</strong>
+            <span>Exact, outside budget</span>
+          </div>
+        </div>
+        <p class="input-budget-note">
+          Compression happens after one standard prefill pass. There is no extra model forward, no additional training, and no mask pretending that removed entries still exist.
+        </p>
+
+        <div class="method-contract">
+          <div>
+            <strong>No preset local quota</strong>
+            <p>Layers, KV heads, and slots do not receive fixed slices of the budget before the input is understood.</p>
+          </div>
+          <div>
+            <strong>Input-conditioned allocation</strong>
+            <p>The same passage may deserve different coverage and resolution in different layer-head pairs.</p>
+          </div>
+          <div>
+            <strong>Global competition, greedy solution</strong>
+            <p>“Global” describes the scope of the auction. It does not claim exact combinatorial global optimality.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section walkthrough-section" id="walkthrough" aria-labelledby="walkthrough-title">
+      <div class="section-inner">
+        <div class="section-heading heading-grid">
+          <div>
+            <p class="section-label">A concrete case</p>
+            <h2 id="walkthrough-title">Follow one answer through 16.9K tokens.</h2>
+          </div>
+          <p class="section-lead">
+            The question asks for a member of the group that performed “Good Little Girls.” The answer is not in the first matching passage: the model must follow a two-hop evidence chain from the song to Blue Country, then to Aaron Benward.
+          </p>
+        </div>
+
+        <div class="evidence-chain" aria-label="Question to answer evidence chain">
+          <div class="evidence-node question-node">
+            <span>Question</span>
+            <strong>Who performed “Good Little Girls”?</strong>
+          </div>
+          <div class="evidence-arrow" aria-hidden="true">01</div>
+          <div class="evidence-node bridge-node">
+            <span>Evidence hop 1</span>
+            <strong>“Good Little Girls” &rarr; Blue Country</strong>
+          </div>
+          <div class="evidence-arrow" aria-hidden="true">02</div>
+          <div class="evidence-node answer-node">
+            <span>Evidence hop 2</span>
+            <strong>Blue Country &rarr; Aaron Benward</strong>
+          </div>
         </div>
 
         <figure class="paper-figure allocation-figure">
-          <img
-            src="assets/allocation-case.webp"
-            width="2000"
-            height="792"
-            alt="GraceKV allocation case showing evidence tokens retained at fine resolution, background regions compressed, and cache entries distributed across layers and KV heads."
-            loading="lazy"
-            decoding="async"
-          />
+          <a href="assets/allocation-case.webp" target="_blank" rel="noreferrer" aria-label="Open the GraceKV allocation case figure at full resolution">
+            <img
+              src="assets/allocation-case.webp"
+              width="2000"
+              height="792"
+              alt="GraceKV allocation case showing exact evidence tokens, merged background prototypes, dropped regions, unequal allocation across layers and KV heads, and finer resolution at high-relevance positions."
+              loading="lazy"
+              decoding="async"
+            />
+          </a>
           <figcaption>
-            GraceKV preserves high-value evidence at fine resolution while compressing distant background context more aggressively. Figure 1 from the paper.
+            At 64&times; compression, names and evidence-chain tokens receive fine or exact representations, while a background region 5.5K tokens away is merged or dropped. The right panels show that the entry count also varies across layers and KV heads. Figure 1 from the paper; open it for the full-resolution view.
           </figcaption>
         </figure>
 
-        <div class="abstract-block">
-          <p class="section-label">Abstract</p>
-          <p>
-            As large language models process increasingly long contexts, KV cache storage and repeated access become a major bottleneck. GraceKV formulates compression as global resource allocation under a fixed cache budget. Each layer-KV-head-slot combination receives a progressively refinable prototype tree: adding a root expands coverage, while splitting a selected node improves local resolution. Candidate actions compete globally, allowing the final cache to adapt across model components and context regions. The method needs no additional training, runs entirely on the GPU, and remains robust at compression ratios up to 128&times; across diverse long-context tasks.
-          </p>
+        <div class="representation-legend" aria-label="Representation legend">
+          <div><span class="legend-swatch exact-swatch"></span><strong>Exact</strong><p>Original token-level K/V for names, numbers, labels, or other sharp evidence.</p></div>
+          <div><span class="legend-swatch merged-swatch"></span><strong>Merged</strong><p>One prototype preserves a span coarsely when broad context matters more than every local detail.</p></div>
+          <div><span class="legend-swatch dropped-swatch"></span><strong>Dropped</strong><p>No physical cache entry is written for that slot in that particular layer-head pair.</p></div>
         </div>
       </div>
     </section>
@@ -240,65 +310,259 @@
         <div class="section-heading heading-grid method-heading">
           <div>
             <p class="section-label">Method</p>
-            <h2 id="method-title">Shape the cache, price each refinement, spend globally.</h2>
+            <h2 id="method-title">Structure flows down. Value flows up. Budget follows utility.</h2>
           </div>
           <p class="section-lead">
-            A unified tree representation turns coverage and resolution into comparable actions. Value flows upward through every tree; budget flows to the most useful action across all trees.
+            GraceKV first builds a common structural vocabulary for coverage and resolution. It then estimates what the current input needs and lets every feasible Add or Split compete in the same physical units.
           </p>
         </div>
 
-        <figure class="paper-figure method-figure">
-          <img
-            src="assets/method-overview.webp"
-            width="2000"
-            height="864"
-            alt="GraceKV method overview with curvature-guided prototype trees, global budget flow, and a value flow combining attention distortion, multi-hop relevance, and head sensitivity."
-            loading="lazy"
-            decoding="async"
-          />
-          <figcaption>
-            Curvature-guided trees expose Add and Split operations to one global utility-ranked budget flow. Figure 2 from the paper.
-          </figcaption>
-        </figure>
-
-        <ol class="method-steps">
-          <li>
-            <span class="step-index">01</span>
-            <div>
-              <h3>Build refinable trees</h3>
-              <p>Curvature and token surprisal define semantic slots. Leaves preserve exact K/V pairs; internal nodes represent contiguous spans with weighted prototypes.</p>
-            </div>
-          </li>
-          <li>
-            <span class="step-index">02</span>
-            <div>
-              <h3>Estimate marginal utility</h3>
-              <p>Direct and multi-hop relevance, attention distortion, and head sensitivity determine the value of adding coverage or increasing resolution.</p>
-            </div>
-          </li>
-          <li>
-            <span class="step-index">03</span>
-            <div>
-              <h3>Allocate one shared budget</h3>
-              <p>Add and Split actions from every layer, KV head, and slot enter a global priority queue. The highest-return action wins each physical cache entry.</p>
-            </div>
-          </li>
+        <ol class="method-roadmap" aria-label="GraceKV method stages">
+          <li><span>01</span><strong>Partition</strong><small>Find coherent slots</small></li>
+          <li><span>02</span><strong>Represent</strong><small>Build prototype trees</small></li>
+          <li><span>03</span><strong>Value</strong><small>Trace direct and indirect evidence</small></li>
+          <li><span>04</span><strong>Allocate</strong><small>Rank Add and Split globally</small></li>
+          <li><span>05</span><strong>Pack</strong><small>Write a physical ragged cache</small></li>
         </ol>
 
-        <div class="operation-band" aria-label="GraceKV allocation operations">
-          <div>
-            <span class="operation-mark add-mark">Add</span>
-            <p>Admit a new root prototype to extend information coverage.</p>
+        <section class="method-chapter segmentation-chapter" aria-labelledby="segmentation-title">
+          <div class="chapter-copy">
+            <p class="chapter-index">01 &middot; Curvature-guided partition</p>
+            <h3 id="segmentation-title">Cut where the representation changes direction.</h3>
+            <p>
+              GraceKV views normalized hidden states as a trajectory along token positions. Smooth stretches can share a longer coarse representation. Stable turns across layers and window scales are better structural boundaries.
+            </p>
+            <p>
+              Token surprisal provides a smaller auxiliary signal, while a dynamic program also considers within-slot dispersion and reasonable slot lengths. Curvature decides <em>where a merge is structurally safe</em>; it does not decide which content is important to the current question.
+            </p>
+            <p class="method-maxim">Structure decides where to split. Relevance decides where to spend.</p>
           </div>
-          <div>
-            <span class="operation-mark split-mark">Split</span>
-            <p>Replace a prototype with its children to increase local resolution.</p>
+
+          <div class="slot-demo" role="img" aria-label="Illustration of token boundary scores: smooth regions form long slots and peaks create shorter slots around rapid representational changes.">
+            <div class="slot-token-row" aria-hidden="true">
+              <span>the</span><span>meeting</span><span>covered</span><span>routine</span><span>updates</span><span>then</span><span>ZX-41</span><span>expires</span><span>Friday</span><span>before</span><span>the</span><span>migration</span>
+            </div>
+            <div class="boundary-bars" aria-hidden="true">
+              <i style="--score: 22%"></i><i style="--score: 30%"></i><i style="--score: 25%"></i><i style="--score: 34%"></i><i style="--score: 28%"></i><i class="boundary-peak" style="--score: 86%"></i><i style="--score: 38%"></i><i class="boundary-peak" style="--score: 96%"></i><i style="--score: 56%"></i><i class="boundary-peak" style="--score: 78%"></i><i style="--score: 26%"></i><i style="--score: 20%"></i>
+            </div>
+            <div class="slot-partition" aria-hidden="true">
+              <span class="slot-a">Slot A &middot; smooth</span>
+              <span class="slot-b">Slot B &middot; dense turns</span>
+              <span class="slot-c">Slot C &middot; smooth</span>
+            </div>
+            <p>Default target: about 64 tokens per slot, adaptively constrained between 16 and 128.</p>
           </div>
-          <div>
-            <span class="operation-mark floor-mark">Floor</span>
-            <p>Keep a small set of high-value singletons exact under the same budget.</p>
+        </section>
+
+        <section class="method-chapter tree-chapter" aria-labelledby="tree-title">
+          <div class="chapter-copy">
+            <p class="chapter-index">02 &middot; Progressively refinable representation</p>
+            <h3 id="tree-title">One tree contains dropping, merging, and exact retention.</h3>
+            <p>
+              The slot boundaries are shared, but every <code>(layer, KV head, slot)</code> tuple receives its own prototype tree. A frontier is a non-overlapping set of nodes that states exactly how this atomic unit is stored.
+            </p>
+            <ul class="frontier-meaning">
+              <li><strong>0 entries:</strong> empty frontier, so the slot is physically absent.</li>
+              <li><strong>1 entry:</strong> the root coarsely covers all eight tokens.</li>
+              <li><strong>3 entries:</strong> selected subregions receive more local detail.</li>
+              <li><strong>8 entries:</strong> every leaf stores its original token K/V.</li>
+            </ul>
           </div>
-        </div>
+
+          <div class="frontier-tool" data-frontier-demo data-level="1">
+            <div class="frontier-tool-header">
+              <div>
+                <span>Frontier explorer</span>
+                <strong data-frontier-title>Coverage: one coarse prototype</strong>
+              </div>
+              <output data-frontier-count aria-live="polite">1 entry</output>
+            </div>
+            <div class="frontier-controls" role="radiogroup" aria-label="Choose the number of entries used to represent the slot">
+              <button type="button" role="radio" data-frontier-level="0" aria-checked="false" aria-label="0 entries" tabindex="-1">0</button>
+              <button type="button" role="radio" data-frontier-level="1" aria-checked="true" aria-label="1 entry" tabindex="0">1</button>
+              <button type="button" role="radio" data-frontier-level="3" aria-checked="false" aria-label="3 entries" tabindex="-1">3</button>
+              <button type="button" role="radio" data-frontier-level="8" aria-checked="false" aria-label="8 entries" tabindex="-1">8</button>
+            </div>
+            <div class="tree-canvas" aria-hidden="true">
+              <div class="tree-level tree-root-level"><span class="tree-node node-root">1&ndash;8</span></div>
+              <div class="tree-level tree-pair-level"><span class="tree-node node-14">1&ndash;4</span><span class="tree-node node-58">5&ndash;8</span></div>
+              <div class="tree-level tree-quad-level"><span class="tree-node node-12">1&ndash;2</span><span class="tree-node node-34">3&ndash;4</span><span class="tree-node node-56">5&ndash;6</span><span class="tree-node node-78">7&ndash;8</span></div>
+              <div class="tree-level tree-leaf-level"><span class="tree-node leaf">1</span><span class="tree-node leaf">2</span><span class="tree-node leaf">3</span><span class="tree-node leaf">4</span><span class="tree-node leaf">5</span><span class="tree-node leaf">6</span><span class="tree-node leaf">7</span><span class="tree-node leaf">8</span></div>
+            </div>
+            <p data-frontier-description>One stored prototype keeps the whole slot addressable, but local token detail is merged.</p>
+          </div>
+        </section>
+
+        <section class="method-chapter prototype-chapter" aria-labelledby="prototype-title">
+          <div class="chapter-copy chapter-copy-wide">
+            <p class="chapter-index">Inside one cache entry</p>
+            <h3 id="prototype-title">A prototype must preserve attention behavior, not merely average vectors.</h3>
+            <p>
+              A coarse node represents a contiguous interval with one packed entry. GraceKV makes the packed representation consistent with the decoder that will actually consume it.
+            </p>
+          </div>
+          <div class="prototype-anatomy">
+            <div>
+              <span class="anatomy-label">Key</span>
+              <h4>Unrotate, average, rerotate</h4>
+              <p>Post-RoPE keys live in different rotated coordinates. GraceKV inverse-rotates them, averages in one shared frame, then applies RoPE at a representative position.</p>
+            </div>
+            <div>
+              <span class="anatomy-label">Value</span>
+              <h4>Let relevant tokens speak louder</h4>
+              <p>Values are weighted by task relevance, with a 10% uniform base so lower-value background information never loses all influence.</p>
+            </div>
+            <div>
+              <span class="anatomy-label">Multiplicity</span>
+              <h4>Discount incoherent merges</h4>
+              <p>Key coherence determines how many original tokens the prototype should effectively count for, preventing an averaged “ghost key” from receiving exaggerated attention mass.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="method-chapter value-chapter" aria-labelledby="value-title">
+          <div class="chapter-copy">
+            <p class="chapter-index">03 &middot; Bottom-up value flow</p>
+            <h3 id="value-title">Ask what the current question needs.</h3>
+            <p>
+              Direct attention from question and sequence-tail probes identifies explicit evidence. Two rounds of token-to-token propagation then recover indirect dependencies, such as a bridge entity that the question does not attend to strongly on its own.
+            </p>
+            <p>
+              Token values sum upward through the prototype tree. A layer-KV-head sensitivity multiplier captures how strongly that component affects the model output. Curvature and surprisal are not multiplied into relevance: they shape the tree, while attention evidence values its nodes.
+            </p>
+          </div>
+
+          <div class="value-flow" role="img" aria-label="Value flow from a question to direct evidence, through indirect supporting evidence, then upward from token leaves into prototype nodes.">
+            <div class="value-flow-chain">
+              <span class="flow-question">Question probes</span>
+              <b aria-hidden="true">+</b>
+              <span class="flow-direct">Direct attention</span>
+              <b aria-hidden="true">+</b>
+              <span class="flow-hop">Two-hop evidence</span>
+            </div>
+            <div class="value-equation">
+              <span>input-conditioned relevance</span>
+              <b>&times;</b>
+              <span>representation fidelity gain</span>
+              <b>&times;</b>
+              <span>head sensitivity</span>
+            </div>
+            <div class="value-tree">
+              <span class="value-parent">node value</span>
+              <span class="value-child">token</span><span class="value-child">token</span><span class="value-child">token</span><span class="value-child">token</span>
+            </div>
+            <p>Children conserve their value when aggregated into a parent, so the same signal can price both coverage at the root and refinement deeper in the tree.</p>
+          </div>
+        </section>
+
+        <section class="method-chapter floor-chapter" aria-labelledby="floor-title">
+          <div class="chapter-copy">
+            <p class="chapter-index">Exact-information safeguard</p>
+            <h3 id="floor-title">The singleton floor protects facts that greedy steps may undervalue.</h3>
+            <p>
+              Names, numbers, labels, and few-shot output formats can have a non-smooth payoff: the exact leaf is very useful, while the intermediate splits needed to reach it may look less attractive one step at a time.
+            </p>
+            <p>
+              GraceKV therefore isolates a small, budget-capped set of high-value <code>(layer, KV head, token)</code> leaves before the main auction. The protection is neither free nor duplicated outside the tree.
+            </p>
+          </div>
+          <div class="floor-path" aria-label="A singleton floor path from a slot root through an internal span to an exact Aaron Benward token">
+            <div><span>Root Add</span><strong>evidence slot</strong></div>
+            <i aria-hidden="true"></i>
+            <div><span>Split / Extract</span><strong>name-bearing span</strong></div>
+            <i aria-hidden="true"></i>
+            <div class="floor-exact"><span>Exact leaf</span><strong>Aaron Benward</strong></div>
+            <p>The complete path cost is charged to the same hard physical budget. Shared ancestors are paid only once.</p>
+          </div>
+        </section>
+
+        <section class="method-chapter auction-chapter" aria-labelledby="auction-title">
+          <div class="chapter-copy">
+            <p class="chapter-index">04 &middot; Top-down budget flow</p>
+            <h3 id="auction-title">Put every feasible Add and Split in one queue.</h3>
+            <p>
+              Add compares complete dropping with one-root coverage. Split compares a parent prototype with its finer child set. Both are scored per newly created cache entry, so an operation in an early layer can compete directly with a different head, slot, or resolution elsewhere.
+            </p>
+            <div class="utility-formula" aria-label="Utility per entry equals relevance times fidelity gain times head sensitivity divided by new physical entries">
+              <span>utility per entry</span>
+              <strong>=</strong>
+              <span>relevance &times; fidelity gain &times; head sensitivity</span>
+              <strong>&divide;</strong>
+              <span>new physical entries</span>
+            </div>
+          </div>
+
+          <div class="auction-board">
+            <div class="auction-heading">
+              <div>
+                <span>Illustrative six-entry auction</span>
+                <strong>Highest affordable marginal utility wins next</strong>
+              </div>
+              <div class="budget-meter" aria-label="Six of six illustrative budget entries allocated"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+            <ol class="auction-queue">
+              <li><span>1</span><div><strong>Floor path &middot; exact code</strong><small>Layer 18 &middot; Head 2 &middot; Slot B &middot; cost 3</small></div><i style="--utility: 100%"></i></li>
+              <li><span>2</span><div><strong>Split &middot; expiry phrase</strong><small>Layer 18 &middot; Head 2 &middot; Slot B &middot; cost 1</small></div><i style="--utility: 78%"></i></li>
+              <li><span>3</span><div><strong>Add &middot; troubleshooting notes</strong><small>Layer 9 &middot; Head 0 &middot; Slot C &middot; cost 1</small></div><i style="--utility: 57%"></i></li>
+              <li><span>4</span><div><strong>Add &middot; meeting background</strong><small>Layer 4 &middot; Head 1 &middot; Slot A &middot; cost 1</small></div><i style="--utility: 39%"></i></li>
+            </ol>
+            <div class="toy-cache" aria-label="Illustrative final six-entry cache: one coarse entry for slot A, four mixed-resolution entries for slot B, and one coarse entry for slot C">
+              <span class="toy-coarse">A coarse</span>
+              <span class="toy-merged">B context</span>
+              <span class="toy-exact">ZX-41</span>
+              <span class="toy-exact">Friday</span>
+              <span class="toy-merged">B detail</span>
+              <span class="toy-coarse">C coarse</span>
+            </div>
+            <p>Toy values are illustrative. The real queue spans every layer, KV head, slot, and currently exposed tree operation.</p>
+          </div>
+        </section>
+
+        <section class="method-chapter pack-chapter" aria-labelledby="pack-title">
+          <div class="chapter-copy">
+            <p class="chapter-index">05 &middot; Physical cache packing</p>
+            <h3 id="pack-title">Write only the frontier nodes that won.</h3>
+            <p>
+              Each layer-head pair receives an independently sized ragged cache. An unselected root produces no entry; an internal node stores a packed prototype; a singleton stores the original K/V. Newly generated tokens are appended with multiplicity one.
+            </p>
+            <p>
+              When the budget returns to FullKV scale, every tree can expand to token leaves and recover the original contextual entries exactly.
+            </p>
+          </div>
+          <div class="ragged-cache" role="img" aria-label="Ragged cache rows of unequal length for different layer and KV head pairs, mixing coarse prototypes, refined spans, and exact singleton entries.">
+            <div><b>L4 H0</b><span class="cache-coarse">16</span><span class="cache-coarse">16</span><span class="cache-refined">4</span><span class="cache-exact">1</span></div>
+            <div><b>L9 H1</b><span class="cache-coarse">32</span><span class="cache-refined">8</span><span class="cache-refined">4</span><span class="cache-exact">1</span><span class="cache-exact">1</span><span class="cache-refined">4</span></div>
+            <div><b>L18 H2</b><span class="cache-refined">8</span><span class="cache-exact">1</span><span class="cache-exact">1</span><span class="cache-exact">1</span><span class="cache-refined">2</span><span class="cache-refined">4</span><span class="cache-coarse">16</span></div>
+            <div><b>L23 H3</b><span class="cache-coarse">32</span><span class="cache-coarse">16</span><span class="cache-refined">4</span></div>
+            <p><span class="cache-coarse"></span>coarse prototype <span class="cache-refined"></span>refined prototype <span class="cache-exact"></span>exact token</p>
+          </div>
+        </section>
+
+        <details class="technical-details">
+          <summary>Technical details and default settings</summary>
+          <div>
+            <p><strong>Slot construction.</strong> Multi-layer, multi-scale curvature is stabilized across sampled depths and windows; surprisal is a smaller auxiliary boundary signal. Default slot length is 16&ndash;128 tokens with a target of 64.</p>
+            <p><strong>Value flow.</strong> Question and sequence-tail probes seed direct relevance; two graph hops with default weight 0.3 recover indirect evidence. Parent values equal the sum of child values.</p>
+            <p><strong>Prototype fidelity.</strong> Probe-based distortion weighs attention-partition error and value-aggregate error at 0.25:0.75. Tree construction considers high-curvature split candidates plus the midpoint, and may isolate a salient token with a three-way child set.</p>
+            <p><strong>Singleton floor.</strong> Its default cap is 0.6 of the allocatable base budget, but this is a hard maximum rather than a guaranteed 60% spend. Every realized singleton pays its complete tree path cost.</p>
+          </div>
+        </details>
+
+        <figure class="paper-figure method-figure technical-overview-figure">
+          <a href="assets/method-overview.webp" target="_blank" rel="noreferrer" aria-label="Open the complete GraceKV method overview at full resolution">
+            <img
+              src="assets/method-overview.webp"
+              width="2000"
+              height="864"
+              alt="Complete GraceKV method overview with curvature-guided prototype trees, global budget flow, and a value flow combining attention, multi-hop relevance, distortion, and head sensitivity."
+              loading="lazy"
+              decoding="async"
+            />
+          </a>
+          <figcaption>
+            Complete technical overview. The web diagrams above unpack the same pipeline step by step; open Figure 2 for the full-resolution paper view.
+          </figcaption>
+        </figure>
       </div>
     </section>
 
@@ -306,22 +570,22 @@
       <div class="section-inner">
         <div class="section-heading heading-grid">
           <div>
-            <p class="section-label">Results</p>
-            <h2 id="results-title">Competitive from 4&times; through 128&times;.</h2>
+            <p class="section-label">Effects and practical meaning</p>
+            <h2 id="results-title">A flexible cache stays useful as the budget tightens.</h2>
           </div>
           <p class="section-lead">
-            Across LongBench and RULER, global allocation stays stable as budgets tighten. Results below use Qwen2.5-7B-Instruct; the paper reports additional models, ablations, and full baselines.
+            The central result is not one isolated benchmark win. GraceKV remains competitive across tasks that demand opposite behaviors: broad coverage for summarization and aggregation, but sharp local addressability for question answering and retrieval.
           </p>
         </div>
 
         <div class="result-stats">
           <article class="result-stat">
-            <strong>21 / 24</strong>
-            <span>LongBench settings ranked first</span>
+            <strong>20 / 24</strong>
+            <span>LongBench settings ranked first; GraceKV ranks second in the other four</span>
           </article>
           <article class="result-stat">
             <strong>76.50</strong>
-            <span>RULER retrieval at a 512-entry budget</span>
+            <span>RULER retrieval at the tightest evaluated budget (32&times; compression)</span>
           </article>
           <article class="result-stat">
             <strong>128&times;</strong>
@@ -329,10 +593,28 @@
           </article>
         </div>
 
+        <div class="task-needs">
+          <div>
+            <span>Summarization</span>
+            <strong>Keep the whole document in view</strong>
+            <p>Broad, lower-resolution coverage prevents entire topics or sections from disappearing.</p>
+          </div>
+          <div>
+            <span>QA and retrieval</span>
+            <strong>Resolve a few locations precisely</strong>
+            <p>Names, values, and evidence hops need exact or finely split entries amid long distractor context.</p>
+          </div>
+          <div>
+            <span>Few-shot generation</span>
+            <strong>Preserve patterns and exact formats</strong>
+            <p>Demonstration structure benefits from coverage, while labels and answer formats benefit from singletons.</p>
+          </div>
+        </div>
+
         <div class="table-wrap" role="region" aria-labelledby="benchmark-table-title" tabindex="0">
           <div class="table-heading">
-            <h3 id="benchmark-table-title">LongBench across cache budgets</h3>
-            <p>F1 for QA; Rouge-L for summarization and few-shot, all &times;100.</p>
+            <h3 id="benchmark-table-title">LongBench across all reported compression ratios</h3>
+            <p>Qwen2.5-7B-Instruct. F1 for QA; Rouge-L for summarization and few-shot, all &times;100.</p>
           </div>
           <table>
             <thead>
@@ -340,41 +622,89 @@
                 <th scope="col">Task</th>
                 <th scope="col">FullKV</th>
                 <th scope="col">4&times;</th>
+                <th scope="col">8&times;</th>
+                <th scope="col">16&times;</th>
                 <th scope="col">32&times;</th>
+                <th scope="col">64&times;</th>
                 <th scope="col">128&times;</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <th scope="row">Single-document QA</th>
-                <td>43.95</td>
-                <td><strong>42.97</strong></td>
-                <td><strong>35.57</strong></td>
-                <td><strong>25.81</strong></td>
+                <td>43.95</td><td><strong>42.97</strong></td><td><strong>41.58</strong></td><td><strong>38.45</strong></td><td><strong>35.57</strong></td><td><strong>31.49</strong></td><td><strong>25.81</strong></td>
               </tr>
               <tr>
                 <th scope="row">Multi-document QA</th>
-                <td>29.86</td>
-                <td><strong>30.18</strong></td>
-                <td><strong>28.18</strong></td>
-                <td><strong>25.19</strong></td>
+                <td>29.86</td><td><strong>30.18</strong></td><td><strong>29.90</strong></td><td><strong>28.78</strong></td><td><strong>28.18</strong></td><td><strong>27.09</strong></td><td><strong>25.19</strong></td>
               </tr>
               <tr>
                 <th scope="row">Summarization</th>
-                <td>15.97</td>
-                <td><strong>15.03</strong></td>
-                <td><strong>13.48</strong></td>
-                <td><strong>11.88</strong></td>
+                <td>15.97</td><td><strong>15.03</strong></td><td><strong>14.51</strong></td><td><strong>14.04</strong></td><td><strong>13.48</strong></td><td><strong>12.58</strong></td><td><strong>11.88</strong></td>
               </tr>
               <tr>
                 <th scope="row">Few-shot</th>
-                <td>36.23</td>
-                <td><strong>35.82</strong></td>
-                <td><strong>33.80</strong></td>
-                <td><strong>32.83</strong></td>
+                <td>36.23</td><td><strong>35.82</strong></td><td><strong>34.77</strong></td><td><strong>33.92</strong></td><td><strong>33.80</strong></td><td><strong>33.18</strong></td><td><strong>32.83</strong></td>
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <div class="quality-reading">
+          <div class="quality-copy">
+            <p class="section-label">How to read the quality curve</p>
+            <h3>Compression is a range of operating points, not one yes-or-no result.</h3>
+            <p>
+              At 4&times;, every LongBench category retains at least 94% of its FullKV row score. At 16&times;, the four categories retain roughly 87&ndash;96%. The 128&times; setting is a deliberate stress test: useful behavior remains, but the loss becomes strongly task-dependent.
+            </p>
+            <div class="quality-regimes" aria-label="Interpretation of three evaluated compression regimes">
+              <div><span>4&times;</span><strong>Near-FullKV regime</strong><small>&ge;94% retained in every row</small></div>
+              <div><span>16&times;</span><strong>Practical high-compression regime</strong><small>87&ndash;96% retained across rows</small></div>
+              <div><span>128&times;</span><strong>Extreme-budget regime</strong><small>Quality depends on what the task must preserve</small></div>
+            </div>
+          </div>
+
+          <figure class="retention-figure" aria-labelledby="retention-title">
+            <figcaption id="retention-title">Share of each FullKV row score retained at 128&times;</figcaption>
+            <div class="retention-row">
+              <span>Few-shot</span>
+              <i><b style="--retention: 90.6%"></b></i>
+              <strong>90.6%</strong>
+            </div>
+            <div class="retention-row">
+              <span>Multi-doc QA</span>
+              <i><b style="--retention: 84.4%"></b></i>
+              <strong>84.4%</strong>
+            </div>
+            <div class="retention-row">
+              <span>Summarization</span>
+              <i><b style="--retention: 74.4%"></b></i>
+              <strong>74.4%</strong>
+            </div>
+            <div class="retention-row">
+              <span>Single-doc QA</span>
+              <i><b style="--retention: 58.7%"></b></i>
+              <strong>58.7%</strong>
+            </div>
+            <p>Descriptive ratios computed within each published table row; they are not a universal quality guarantee.</p>
+          </figure>
+        </div>
+
+        <div class="ruler-result" aria-label="GraceKV RULER retrieval results: 87.25 at 4x compression with a nominal 4096-entry budget, 86.75 at 8x with 2048, 86.25 at 16x with 1024, and 76.50 at 32x with 512">
+          <div>
+            <p class="section-label">Precise retrieval under a shrinking budget</p>
+            <h3>GraceKV remains above 76 at the tightest evaluated 32&times; budget.</h3>
+            <p>RULER set recall checks whether every distant target is recovered, making it a strict test of local addressability rather than approximate semantic similarity. In this Qwen2.5-7B-Instruct Retrieval setting, moving from 4&times; to 16&times; costs 1.00 point, while moving from 16&times; to 32&times; costs 9.75 points.</p>
+          </div>
+          <div class="ruler-track">
+            <span><strong>87.25</strong><small>4&times; · nominal 4K</small></span>
+            <i aria-hidden="true"></i>
+            <span><strong>86.75</strong><small>8&times; · nominal 2K</small></span>
+            <i aria-hidden="true"></i>
+            <span><strong>86.25</strong><small>16&times; · nominal 1K</small></span>
+            <i aria-hidden="true"></i>
+            <span><strong>76.50</strong><small>32&times; · nominal 512</small></span>
+          </div>
         </div>
 
         <div class="efficiency-grid">
@@ -387,30 +717,93 @@
               loading="lazy"
               decoding="async"
             />
-            <figcaption>KV cache memory and decode latency as context grows. Figure 3 from the paper.</figcaption>
+            <figcaption>Physical KV cache memory and per-token decode latency as context grows. Figure 3 from the paper.</figcaption>
           </figure>
 
           <div class="efficiency-copy">
             <p class="section-label">Efficiency at 30K context</p>
-            <h3>Memory falls immediately. Decode cost stays nearly flat.</h3>
+            <h3>Memory headroom is the immediate deployment benefit.</h3>
             <dl class="efficiency-metrics">
-              <div>
-                <dt>FullKV</dt>
-                <dd>1.77 GB</dd>
-              </div>
-              <div>
-                <dt>GraceKV at 8&times;</dt>
-                <dd>246 MB</dd>
-              </div>
-              <div>
-                <dt>GraceKV at 16&times;</dt>
-                <dd>137 MB</dd>
-              </div>
+              <div><dt>FullKV</dt><dd>1.77 GB</dd></div>
+              <div><dt>GraceKV 4&times;</dt><dd>463 MB</dd></div>
+              <div><dt>GraceKV 8&times;</dt><dd>246 MB</dd></div>
+              <div><dt>GraceKV 16&times;</dt><dd>137 MB</dd></div>
             </dl>
-            <p>
-              At the longest evaluated context, FullKV decoding is up to 1.7&times; slower. GraceKV introduces a one-time cache construction cost after prefill, averaging about 2.35 seconds in the reported single-document QA setup, with roughly 8% temporary peak-memory overhead.
+            <p class="efficiency-meaning">
+              That is roughly 74%, 86%, and 92% less KV-cache memory at 4&times;, 8&times;, and 16&times;. In practice, this headroom can make longer contexts or larger batches feasible, depending on the model weights, activations, serving stack, and available GPU memory.
             </p>
+
+            <div class="capacity-translation" aria-label="Approximate number of 30K KV cache footprints within the 1.77 GB FullKV cache memory envelope">
+              <p>Within the same <strong>1.77 GB KV-only envelope</strong></p>
+              <div><span>FullKV</span><i><b style="--capacity: 7.7%"></b></i><strong>1.0 cache</strong></div>
+              <div><span>GraceKV 4&times;</span><i><b style="--capacity: 29.5%"></b></i><strong>&asymp;3.8 caches</strong></div>
+              <div><span>GraceKV 8&times;</span><i><b style="--capacity: 55.8%"></b></i><strong>&asymp;7.2 caches</strong></div>
+              <div><span>GraceKV 16&times;</span><i><b style="--capacity: 100%"></b></i><strong>&asymp;12.9 caches</strong></div>
+              <small>This is cache-footprint arithmetic, not an end-to-end concurrency claim; weights, activations, fragmentation, and the serving stack also consume memory.</small>
+            </div>
           </div>
+        </div>
+
+        <div class="practical-impact">
+          <div>
+            <span>Steady-state decoding</span>
+            <strong>Fewer entries reduce cache traffic, but not every latency</strong>
+            <p>At the longest evaluated context in Figure 3, FullKV is up to 1.7&times; slower. The detailed appendix also finds GraceKV and FullKV nearly tied on some datasets under the unified decoder, so memory reduction is the robust result; speedup remains kernel- and workload-dependent.</p>
+          </div>
+          <div>
+            <span>One-time construction</span>
+            <strong>Flexibility has an upfront cost</strong>
+            <p>GraceKV builds input-conditioned trees and allocates the budget once after prefill. This remains a seconds-level cost whose exact value depends strongly on context length and engineering configuration, making construction the main systems optimization target.</p>
+          </div>
+          <div>
+            <span>Where it matters most</span>
+            <strong>Long or reusable contexts</strong>
+            <p>The tradeoff is most attractive when memory is the binding constraint, the context will support a long continuation or repeated turns, or severe compression would otherwise erase critical evidence.</p>
+          </div>
+        </div>
+
+        <div class="deployment-guide">
+          <div class="deployment-heading">
+            <p class="section-label">What this can change in practice</p>
+            <h3>GraceKV can create headroom under a fixed memory ceiling.</h3>
+            <p>Saved KV-cache bytes may support longer serviceable contexts or larger batches. These are deployment implications, not end-to-end serving measurements; realized gains also depend on model weights, activations, memory fragmentation, and the scheduler.</p>
+          </div>
+          <div class="deployment-scenarios">
+            <article>
+              <span>Document assistants</span>
+              <strong>Keep more source material resident</strong>
+              <p>A smaller cache can make it feasible to keep more of a long report, contract, or paper collection resident without forcing every section to receive the same resolution. Repeated generations from the same complete prefill state can amortize construction.</p>
+            </article>
+            <article>
+              <span>Agents and coding systems</span>
+              <strong>Preserve exact identifiers inside long histories</strong>
+              <p>Repository context, tool traces, entity names, numbers, and output formats mix broad background with a few exact facts, matching the method's coverage-versus-resolution design.</p>
+            </article>
+            <article>
+              <span>Multi-user serving</span>
+              <strong>Create possible batch or concurrency headroom</strong>
+              <p>When KV memory limits admission, a smaller physical cache may let a serving system keep more sessions on device or reduce pressure to evict and offload caches. This behavior was not measured end to end in the paper.</p>
+            </article>
+            <article class="deployment-caution">
+              <span>Where the tradeoff is weaker</span>
+              <strong>Short, one-shot, or compute-bound requests</strong>
+              <p>If generation is brief, the context is small, or attention is not memory-bandwidth limited, the seconds-level construction cost can outweigh the steady-state saving. The paper therefore presents memory capacity as the primary near-term systems benefit.</p>
+            </article>
+          </div>
+        </div>
+
+        <div class="ablation-lessons">
+          <div class="ablation-heading">
+            <p class="section-label">What the ablations say</p>
+            <h3>The gains come from coordinating the whole pipeline.</h3>
+          </div>
+          <dl>
+            <div><dt>Without global allocation</dt><dd>Fixed layer-head limits trap unused budget and prevent it from flowing to higher-utility operations elsewhere.</dd></div>
+            <div><dt>Without multi-resolution trees</dt><dd>The cache loses the ability to move continuously from dropping to coarse coverage to exact token retention.</dd></div>
+            <div><dt>Without the singleton floor</dt><dd>Greedy marginal steps can blur entities, numbers, labels, and other facts whose exact benefit appears only after a complete refinement path.</dd></div>
+            <div><dt>Without curvature-guided structure</dt><dd>Uniform chunks are more likely to merge across representational turns or spend roots on unnecessarily short smooth regions.</dd></div>
+            <div><dt>Without multi-hop relevance</dt><dd>Indirect evidence can receive too little value when the question attends mainly to the first hop in a reasoning chain.</dd></div>
+          </dl>
         </div>
       </div>
     </section>
