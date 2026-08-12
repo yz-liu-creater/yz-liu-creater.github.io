@@ -4,6 +4,22 @@ const navigation = document.querySelector("[data-site-nav]");
 const navigationLinks = Array.from(document.querySelectorAll("[data-section-link]"));
 const citationButtons = Array.from(document.querySelectorAll("[data-copy-citation]"));
 const citation = document.querySelector("#bibtex")?.textContent?.trim() || "";
+const isChinese = document.documentElement.lang.toLowerCase().startsWith("zh");
+const uiText = isChinese
+  ? {
+      openNavigation: "打开导航",
+      closeNavigation: "关闭导航",
+      copied: "已复制",
+      copy: "复制",
+      copyBibtex: "复制 BibTeX",
+    }
+  : {
+      openNavigation: "Open navigation",
+      closeNavigation: "Close navigation",
+      copied: "Copied",
+      copy: "Copy",
+      copyBibtex: "Copy BibTeX",
+    };
 let menuReturnFocus = null;
 
 function updateHeader() {
@@ -20,8 +36,8 @@ function setMenu(open, restoreFocus = true) {
   }
 
   menuButton.setAttribute("aria-expanded", String(open));
-  menuButton.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
-  menuButton.setAttribute("title", open ? "Close navigation" : "Open navigation");
+  menuButton.setAttribute("aria-label", open ? uiText.closeNavigation : uiText.openNavigation);
+  menuButton.setAttribute("title", open ? uiText.closeNavigation : uiText.openNavigation);
   navigation.classList.toggle("is-open", open);
   document.body.classList.toggle("menu-open", open);
 
@@ -89,10 +105,10 @@ function setCopyState(button, copied) {
 
   if (label) {
     label.textContent = copied
-      ? "Copied"
+      ? uiText.copied
       : button.closest(".bibtex-header")
-        ? "Copy"
-        : "Copy BibTeX";
+        ? uiText.copy
+        : uiText.copyBibtex;
   }
 
   if (icon) {
@@ -120,7 +136,28 @@ const frontierTitle = document.querySelector("[data-frontier-title]");
 const frontierCount = document.querySelector("[data-frontier-count]");
 const frontierDescription = document.querySelector("[data-frontier-description]");
 
-const frontierStates = {
+const frontierStates = isChinese ? {
+  0: {
+    title: "丢弃：空前沿",
+    count: "0 个条目",
+    description: "根节点没有被纳入，因此这个层—头组合不会为该语义槽写入任何物理条目。",
+  },
+  1: {
+    title: "有覆盖：一个粗粒度原型",
+    count: "1 个条目",
+    description: "一个已存储的原型让整个语义槽仍可被访问，但局部 token 细节被合并。",
+  },
+  3: {
+    title: "混合局部分辨率",
+    count: "3 个条目",
+    description: "三个互不重叠的前沿节点把更多细节分配给关键区域，同时让其余部分保持粗粒度。",
+  },
+  8: {
+    title: "精确：token 级叶节点",
+    count: "8 个条目",
+    description: "每个叶节点都保存原始 K/V 对；完全展开后可精确恢复未压缩的语义槽。",
+  },
+} : {
   0: {
     title: "Dropped: empty frontier",
     count: "0 entries",

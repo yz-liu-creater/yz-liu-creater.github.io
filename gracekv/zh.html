@@ -1,0 +1,913 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f7f9f6" />
+  <meta
+    name="description"
+    content="GraceKV 在统一缓存预算下，跨层、KV 头和上下文区域全局分配 KV 缓存的局部分辨率与覆盖范围。"
+  />
+  <meta name="author" content="田昊霖 (Haolin Tian), 刘宇哲 (Yuzhe Liu), 王同翰 (Tonghan Wang)" />
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="GraceKV" />
+  <meta property="og:locale" content="zh_CN" />
+  <meta property="og:locale:alternate" content="en_US" />
+  <meta property="og:title" content="GraceKV：面向 KV 缓存压缩的覆盖范围与局部分辨率全局分配" />
+  <meta
+    property="og:description"
+    content="让每个缓存条目都物有所值：在统一 KV 缓存预算下，全局分配覆盖范围与局部分辨率。"
+  />
+  <meta property="og:url" content="https://yz-liu-creater.github.io/gracekv/zh.html" />
+  <meta property="og:image" content="https://yz-liu-creater.github.io/gracekv/assets/og-gracekv.webp" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="GraceKV：面向 KV 缓存压缩的覆盖范围与局部分辨率全局分配" />
+  <meta
+    name="twitter:description"
+    content="一种面向 KV 缓存压缩的全局资源分配方法，在 128 倍压力测试下仍保留可用的任务行为。"
+  />
+  <meta name="twitter:image" content="https://yz-liu-creater.github.io/gracekv/assets/og-gracekv.webp" />
+  <link rel="canonical" href="https://yz-liu-creater.github.io/gracekv/zh.html" />
+  <link rel="alternate" hreflang="en" href="https://yz-liu-creater.github.io/gracekv/" />
+  <link rel="alternate" hreflang="zh-CN" href="https://yz-liu-creater.github.io/gracekv/zh.html" />
+  <link rel="alternate" hreflang="x-default" href="https://yz-liu-creater.github.io/gracekv/" />
+  <link rel="preload" as="image" href="assets/method-overview.webp" fetchpriority="high" />
+  <link rel="stylesheet" href="style.css?v=20260812g" />
+  <script src="script.js?v=20260812g" defer></script>
+  <title>GraceKV｜面向 KV 缓存压缩的覆盖范围与局部分辨率全局分配</title>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ScholarlyArticle",
+      "headline": "Every Cache Entry Earns Its Place: Global Allocation of Resolution and Coverage for KV Cache Compression",
+      "name": "GraceKV",
+      "description": "在统一缓存预算下，跨层、KV 头和上下文区域全局分配局部分辨率与覆盖范围的 KV 缓存压缩方法。",
+      "datePublished": "2026-08-07",
+      "identifier": "https://doi.org/10.48550/arXiv.2608.07001",
+      "url": "https://yz-liu-creater.github.io/gracekv/zh.html",
+      "sameAs": "https://arxiv.org/abs/2608.07001",
+      "mainEntityOfPage": "https://yz-liu-creater.github.io/gracekv/zh.html",
+      "author": [
+        { "@type": "Person", "name": "田昊霖", "alternateName": "Haolin Tian" },
+        { "@type": "Person", "name": "刘宇哲", "alternateName": "Yuzhe Liu" },
+        { "@type": "Person", "name": "王同翰", "alternateName": "Tonghan Wang" }
+      ],
+      "affiliation": {
+        "@type": "CollegeOrUniversity",
+        "name": "清华大学",
+        "alternateName": "Tsinghua University"
+      }
+    }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳到正文</a>
+
+  <svg class="icon-sprite" aria-hidden="true">
+    <symbol id="icon-file-text" viewBox="0 0 24 24">
+      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+      <path d="M14 2v6h6M8 13h8M8 17h8M8 9h2" />
+    </symbol>
+    <symbol id="icon-external" viewBox="0 0 24 24">
+      <path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+    </symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24">
+      <rect width="14" height="14" x="8" y="8" rx="2" />
+      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+    </symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24">
+      <path d="m20 6-11 11-5-5" />
+    </symbol>
+    <symbol id="icon-menu" viewBox="0 0 24 24">
+      <path d="M4 6h16M4 12h16M4 18h16" />
+    </symbol>
+    <symbol id="icon-x" viewBox="0 0 24 24">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </symbol>
+    <symbol id="icon-arrow-down" viewBox="0 0 24 24">
+      <path d="M12 5v14M19 12l-7 7-7-7" />
+    </symbol>
+  </svg>
+
+  <header class="site-header" data-header>
+    <div class="header-inner">
+      <a class="wordmark" href="#top" aria-label="GraceKV 首页">GraceKV</a>
+
+      <button
+        class="menu-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="site-nav"
+        aria-label="打开导航"
+        title="打开导航"
+        data-menu-toggle
+      >
+        <svg class="menu-icon" aria-hidden="true"><use href="#icon-menu"></use></svg>
+        <svg class="close-icon" aria-hidden="true"><use href="#icon-x"></use></svg>
+      </button>
+
+      <nav class="site-nav" id="site-nav" aria-label="论文页面导航" data-site-nav>
+        <a href="#overview" data-section-link="overview">概览</a>
+        <a href="#walkthrough" data-section-link="walkthrough">案例</a>
+        <a href="#method" data-section-link="method">方法</a>
+        <a href="#results" data-section-link="results">效果</a>
+        <a href="#citation" data-section-link="citation">引用</a>
+      </nav>
+
+      <div class="header-tools">
+        <div class="language-switch" aria-label="语言选择">
+          <a href="index.html" lang="en" hreflang="en">EN</a>
+          <span aria-hidden="true">/</span>
+          <a href="zh.html" lang="zh-CN" hreflang="zh-CN" aria-current="page">中文</a>
+        </div>
+        <a
+          class="header-paper"
+          href="https://arxiv.org/pdf/2608.07001"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <svg aria-hidden="true"><use href="#icon-file-text"></use></svg>
+          <span>论文</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="hero-media" aria-hidden="true"></div>
+      <div class="hero-overlay" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <p class="hero-kicker"><span>arXiv 2026</span><span>机器学习</span></p>
+        <h1 id="hero-title">GraceKV</h1>
+        <p class="paper-title">
+          Every Cache Entry Earns Its Place: Global Allocation of Resolution and Coverage for KV Cache Compression
+        </p>
+
+        <ul class="author-list" aria-label="作者">
+          <li>
+            <a href="https://arxiv.org/search/cs?searchtype=author&amp;query=Tian%2C+H" target="_blank" rel="noreferrer">田昊霖<sup>*</sup></a>
+          </li>
+          <li><a href="../index.html">刘宇哲<sup>*</sup></a></li>
+          <li>
+            <a href="https://arxiv.org/search/cs?searchtype=author&amp;query=Wang%2C+T" target="_blank" rel="noreferrer">王同翰<sup>&dagger;</sup></a>
+          </li>
+        </ul>
+        <p class="author-note">* 同等贡献 &nbsp; &dagger; 通讯作者</p>
+        <p class="affiliation">清华大学 · 中国北京</p>
+
+        <div class="hero-actions" aria-label="论文资源">
+          <a class="action action-primary" href="https://arxiv.org/pdf/2608.07001" target="_blank" rel="noreferrer">
+            <svg aria-hidden="true"><use href="#icon-file-text"></use></svg>
+            <span>阅读论文</span>
+          </a>
+          <a class="action action-secondary" href="https://arxiv.org/html/2608.07001v1" target="_blank" rel="noreferrer">
+            <span>arXiv 网页版</span>
+            <svg aria-hidden="true"><use href="#icon-external"></use></svg>
+          </a>
+          <button class="action action-secondary" type="button" data-copy-citation>
+            <svg aria-hidden="true"><use href="#icon-copy"></use></svg>
+            <span data-copy-label>复制 BibTeX</span>
+          </button>
+        </div>
+      </div>
+
+      <a class="hero-jump" href="#overview" aria-label="继续阅读概览" title="继续阅读概览">
+        <svg aria-hidden="true"><use href="#icon-arrow-down"></use></svg>
+      </a>
+    </section>
+
+    <section class="signal-band" aria-label="GraceKV 亮点">
+      <div class="signal-inner">
+        <div class="signal-item">
+          <strong>全局</strong>
+          <span>一个预算覆盖所有层、KV 头与语义槽</span>
+        </div>
+        <div class="signal-item">
+          <strong>128&times;</strong>
+          <span>128 倍压力测试下仍保留可用行为</span>
+        </div>
+        <div class="signal-item">
+          <strong>零</strong>
+          <span>额外训练或模型前向</span>
+        </div>
+        <div class="signal-item">
+          <strong>GPU</strong>
+          <span>压缩与推理均在设备端完成</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section overview-section" id="overview" aria-labelledby="overview-title">
+      <div class="section-inner">
+        <div class="section-heading heading-grid">
+          <div>
+            <p class="section-label">核心思想</p>
+            <h2 id="overview-title">一个预算，两种花法。</h2>
+          </div>
+          <p class="section-lead">
+            在固定的物理缓存预算下，下一个 K/V 条目既可以覆盖一个当前缺失的区域，也可以细化一个已经被表示的区域。GraceKV 把这两种选择放到同一尺度上直接比较。
+          </p>
+        </div>
+
+        <div class="decision-grid">
+          <article class="decision-block coverage-decision">
+            <span class="decision-kicker">购买覆盖范围</span>
+            <h3>加入一个新区段</h3>
+            <p>一个根原型，就能让某个层和 KV 头看到完整的上下文语义槽。</p>
+          </article>
+          <article class="decision-block resolution-decision">
+            <span class="decision-kicker">购买局部分辨率</span>
+            <h3>细化已经覆盖的区域</h3>
+            <p>一次 Split 用预先选定的子节点集合替换一个粗粒度原型，只在细节确实值得保留的位置增加条目。</p>
+          </article>
+          <div class="budget-equation" aria-label="一组已存储的 K V 对等于一个物理预算单位">
+            <span>1 组已存储 K/V 对</span>
+            <strong>=</strong>
+            <span>1 个物理预算单位</span>
+          </div>
+        </div>
+
+        <div class="input-budget" role="img" aria-label="输入布局：提示词与问题在压缩预算之外精确保留；长上下文被压缩；近期上下文窗口精确保留并计入预算。">
+          <div class="input-segment prompt-segment">
+            <strong>提示词</strong>
+            <span>精确保留，不计入预算</span>
+          </div>
+          <div class="input-segment context-segment">
+            <strong>可压缩的长上下文</strong>
+            <span>共享的全局 Add/Split 竞价</span>
+          </div>
+          <div class="input-segment recent-segment">
+            <strong>近期窗口</strong>
+            <span>精确保留，计入预算</span>
+          </div>
+          <div class="input-segment question-segment">
+            <strong>问题与后缀</strong>
+            <span>精确保留，不计入预算</span>
+          </div>
+        </div>
+        <p class="input-budget-note">
+          压缩发生在一次标准预填充之后。GraceKV 复用这一遍前向中已经收集的 Q/K/V、采样隐藏状态、问题区域输出与 token 惊异度；不需要额外模型前向、不需要追加训练，也不会用掩码假装被删除的条目仍然存在。
+        </p>
+
+        <div class="method-contract">
+          <div>
+            <strong>不预设局部配额</strong>
+            <p>在理解当前输入之前，不会先给各层、KV 头或语义槽切出固定份额。</p>
+          </div>
+          <div>
+            <strong>随输入而变的分配</strong>
+            <p>同一段文本在不同的层—KV 头组合中，可能需要不同的覆盖范围与局部分辨率。</p>
+          </div>
+          <div>
+            <strong>全局竞争，贪心求解</strong>
+            <p>“全局”只描述竞价的竞争范围覆盖所有候选位置，并不声称得到精确的组合全局最优解。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section walkthrough-section" id="walkthrough" aria-labelledby="walkthrough-title">
+      <div class="section-inner">
+        <div class="section-heading heading-grid">
+          <div>
+            <p class="section-label">一个具体案例</p>
+            <h2 id="walkthrough-title">沿着一条答案链，走过 1.69 万个 token。</h2>
+          </div>
+          <p class="section-lead">
+            问题要找出演唱《Good Little Girls》的组合成员。答案不在第一段匹配文本中：模型必须沿着两跳证据链，从歌曲找到 Blue Country，再从 Blue Country 找到 Aaron Benward。
+          </p>
+        </div>
+
+        <div class="evidence-chain" aria-label="从问题到答案的证据链">
+          <div class="evidence-node question-node">
+            <span>问题</span>
+            <strong>谁演唱了《Good Little Girls》？</strong>
+          </div>
+          <div class="evidence-arrow" aria-hidden="true">01</div>
+          <div class="evidence-node bridge-node">
+            <span>证据第 1 跳</span>
+            <strong>Good Little Girls &rarr; Blue Country</strong>
+          </div>
+          <div class="evidence-arrow" aria-hidden="true">02</div>
+          <div class="evidence-node answer-node">
+            <span>证据第 2 跳</span>
+            <strong>Blue Country &rarr; Aaron Benward</strong>
+          </div>
+        </div>
+
+        <figure class="paper-figure allocation-figure">
+          <a href="assets/allocation-case.webp" target="_blank" rel="noreferrer" aria-label="以完整分辨率打开 GraceKV 分配案例图">
+            <img
+              src="assets/allocation-case.webp"
+              width="2000"
+              height="792"
+              alt="GraceKV 分配案例：证据 token 被精确保留，背景由原型合并或被丢弃；不同层与 KV 头获得不等的条目数，高相关位置具有更高局部分辨率。"
+              loading="lazy"
+              decoding="async"
+            />
+          </a>
+          <figcaption>
+            在 64 倍压缩下，位于 token 3185&ndash;3272 与 5995&ndash;6082 的两段证据获得精细或精确表示；位于 9000&ndash;9087、距证据约 5.5K token 的无关背景则被合并或丢弃。不同层—KV 头的分配同样不均匀：平均 232 个条目，最少 121，最多 410。图引自论文图 1；点击可查看完整分辨率版本。
+          </figcaption>
+        </figure>
+
+        <div class="representation-legend" aria-label="表示方式图例">
+          <div><span class="legend-swatch exact-swatch"></span><strong>精确</strong><p>为姓名、数字、标签或其他关键证据保留原始 token 级 K/V。</p></div>
+          <div><span class="legend-swatch merged-swatch"></span><strong>合并</strong><p>当整体语境比每一处局部细节更重要时，用一个原型对一段文本做粗粒度保留。</p></div>
+          <div><span class="legend-swatch dropped-swatch"></span><strong>丢弃</strong><p>对于这个特定的层—KV 头组合，该语义槽不写入任何物理缓存条目。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section method-section" id="method" aria-labelledby="method-title">
+      <div class="section-inner">
+        <div class="section-heading heading-grid method-heading">
+          <div>
+            <p class="section-label">方法</p>
+            <h2 id="method-title">结构向下展开，价值向上汇聚，预算追随效用。</h2>
+          </div>
+          <p class="section-lead">
+            GraceKV 先为覆盖范围和局部分辨率建立一套统一的结构表达，再估计当前输入真正需要什么，让每个可行的 Add 或 Split 用同一种物理单位参与竞争。
+          </p>
+        </div>
+
+        <ol class="method-roadmap" aria-label="GraceKV 方法阶段">
+          <li><span>01</span><strong>划分</strong><small>找到连贯的语义槽</small></li>
+          <li><span>02</span><strong>表示</strong><small>构建原型树</small></li>
+          <li><span>03</span><strong>赋值</strong><small>追踪直接与间接证据</small></li>
+          <li><span>04</span><strong>分配</strong><small>全局排序 Add 与 Split</small></li>
+          <li><span>05</span><strong>打包</strong><small>写入物理不等长缓存</small></li>
+        </ol>
+
+        <section class="method-chapter segmentation-chapter" aria-labelledby="segmentation-title">
+          <div class="chapter-copy">
+            <p class="chapter-index">01 &middot; 曲率引导的划分</p>
+            <h3 id="segmentation-title">在表征改变方向的位置切分。</h3>
+            <p>
+              GraceKV 把归一化隐藏状态看作一条沿 token 位置前进的轨迹。平滑区段可以共享更长的粗粒度表示；跨层、跨窗口尺度都稳定出现的转向，则更适合作为结构边界。
+            </p>
+            <p>
+              Token 惊异度提供较弱的辅助信号，动态规划还会同时考虑语义槽内部离散程度与合理长度。曲率决定的是<em>在哪里合并在结构上更安全</em>，而不是哪些内容对当前问题更重要。
+            </p>
+            <p class="method-maxim">结构决定在哪里切分，相关性决定在哪里花预算。</p>
+          </div>
+
+          <div class="slot-demo" role="img" aria-label="Token 边界分数示意：平滑区域形成较长语义槽，峰值则在表征快速变化处形成更短语义槽。">
+            <div class="slot-token-row" aria-hidden="true">
+              <span>本次</span><span>会议</span><span>包含</span><span>常规</span><span>更新</span><span>随后</span><span>ZX-41</span><span>将于</span><span>周五</span><span>到期</span><span>迁移</span><span>之前</span>
+            </div>
+            <div class="boundary-bars" aria-hidden="true">
+              <i style="--score: 22%"></i><i style="--score: 30%"></i><i style="--score: 25%"></i><i style="--score: 34%"></i><i style="--score: 28%"></i><i class="boundary-peak" style="--score: 86%"></i><i style="--score: 38%"></i><i class="boundary-peak" style="--score: 96%"></i><i style="--score: 56%"></i><i class="boundary-peak" style="--score: 78%"></i><i style="--score: 26%"></i><i style="--score: 20%"></i>
+            </div>
+            <div class="slot-partition" aria-hidden="true">
+              <span class="slot-a">语义槽 A &middot; 平滑</span>
+              <span class="slot-b">语义槽 B &middot; 转向密集</span>
+              <span class="slot-c">语义槽 C &middot; 平滑</span>
+            </div>
+            <p>默认目标为每个语义槽约 64 个 token，并自适应约束在 16 至 128 个 token 之间。</p>
+          </div>
+        </section>
+
+        <section class="method-chapter tree-chapter" aria-labelledby="tree-title">
+          <div class="chapter-copy">
+            <p class="chapter-index">02 &middot; 渐进可细化表示</p>
+            <h3 id="tree-title">一棵树同时涵盖丢弃、合并与精确保留。</h3>
+            <p>
+              所有位置共享语义槽边界，但每个 <code>(层, KV 头, 语义槽)</code> 三元组都拥有自己的原型树。前沿是一组互不重叠的节点，它准确说明这个原子单元如何被存储。
+            </p>
+            <ul class="frontier-meaning">
+              <li><strong>0 个条目：</strong>前沿为空，因此这个语义槽在物理缓存中不存在。</li>
+              <li><strong>1 个条目：</strong>根节点以粗粒度覆盖全部 8 个 token。</li>
+              <li><strong>3 个条目：</strong>选中的子区域获得更高局部分辨率。</li>
+              <li><strong>8 个条目：</strong>每个叶节点都保存其原始 token K/V。</li>
+            </ul>
+          </div>
+
+        <div class="frontier-tool" data-frontier-demo data-level="1" aria-label="交互式前沿探索器；可在 0、1、3、8 个缓存条目之间选择">
+            <div class="frontier-tool-header">
+              <div>
+                <span>前沿探索器</span>
+                <strong data-frontier-title>覆盖范围：一个粗粒度原型</strong>
+              </div>
+              <output data-frontier-count aria-live="polite">1 个条目</output>
+            </div>
+            <div class="frontier-controls" role="radiogroup" aria-label="选择用于表示这个语义槽的条目数">
+              <button type="button" role="radio" data-frontier-level="0" aria-checked="false" aria-label="0 个条目" tabindex="-1">0</button>
+              <button type="button" role="radio" data-frontier-level="1" aria-checked="true" aria-label="1 个条目" tabindex="0">1</button>
+              <button type="button" role="radio" data-frontier-level="3" aria-checked="false" aria-label="3 个条目" tabindex="-1">3</button>
+              <button type="button" role="radio" data-frontier-level="8" aria-checked="false" aria-label="8 个条目" tabindex="-1">8</button>
+            </div>
+            <div class="tree-canvas" aria-hidden="true">
+              <div class="tree-level tree-root-level"><span class="tree-node node-root">1&ndash;8</span></div>
+              <div class="tree-level tree-pair-level"><span class="tree-node node-14">1&ndash;4</span><span class="tree-node node-58">5&ndash;8</span></div>
+              <div class="tree-level tree-quad-level"><span class="tree-node node-12">1&ndash;2</span><span class="tree-node node-34">3&ndash;4</span><span class="tree-node node-56">5&ndash;6</span><span class="tree-node node-78">7&ndash;8</span></div>
+              <div class="tree-level tree-leaf-level"><span class="tree-node leaf">1</span><span class="tree-node leaf">2</span><span class="tree-node leaf">3</span><span class="tree-node leaf">4</span><span class="tree-node leaf">5</span><span class="tree-node leaf">6</span><span class="tree-node leaf">7</span><span class="tree-node leaf">8</span></div>
+            </div>
+            <p data-frontier-description>一个已存储原型让整个语义槽仍可被寻址，但局部 token 细节会被合并。</p>
+          </div>
+        </section>
+
+        <section class="method-chapter prototype-chapter" aria-labelledby="prototype-title">
+          <div class="chapter-copy chapter-copy-wide">
+            <p class="chapter-index">单个缓存条目内部</p>
+            <h3 id="prototype-title">原型要保留注意力行为，而不只是对向量求平均。</h3>
+            <p>
+              一个粗粒度节点用一条打包后的缓存表示一个连续区间。GraceKV 让这份打包表示与真正消费它的解码器保持一致。
+            </p>
+          </div>
+          <div class="prototype-anatomy">
+            <div>
+              <span class="anatomy-label">键（Key）</span>
+              <h4>逆旋转、求平均、再旋转</h4>
+              <p>经过 RoPE 的键处在不同旋转坐标中。GraceKV 先将其逆旋转到同一坐标系，再求平均，最后在代表位置重新应用 RoPE。</p>
+            </div>
+            <div>
+              <span class="anatomy-label">值（Value）</span>
+              <h4>让相关 token 拥有更大话语权</h4>
+              <p>Value 按任务相关性加权，同时保留 10% 的均匀基线，使低价值背景信息也不会完全失去影响。</p>
+            </div>
+            <div>
+              <span class="anatomy-label">多重性</span>
+              <h4>对不连贯的合并降权</h4>
+              <p>键的一致性决定这个原型应当等效代表多少原始 token，避免平均得到的“幽灵键”获得被夸大的注意力质量。</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="method-chapter value-chapter" aria-labelledby="value-title">
+          <div class="chapter-copy">
+            <p class="chapter-index">03 &middot; 自底向上的价值流</p>
+            <h3 id="value-title">询问当前问题真正需要什么。</h3>
+            <p>
+              来自问题与序列尾部探针的直接注意力，可以识别显式证据；随后两轮 token 到 token 的传播会恢复间接依赖，例如问题本身没有强烈关注、但推理链必须经过的桥接实体。
+            </p>
+            <p>
+              Token 价值沿原型树向上求和。层—KV 头敏感度乘子刻画这一组件对模型输出的影响强弱。曲率和惊异度不会直接乘入相关性：它们塑造树的结构，而注意力证据为树节点定价。
+            </p>
+          </div>
+
+          <div class="value-flow" role="img" aria-label="价值从问题流向直接证据，再传播至间接支持证据，最后由 token 叶节点向上汇聚到原型节点。">
+            <div class="value-flow-chain">
+              <span class="flow-question">问题探针</span>
+              <b aria-hidden="true">+</b>
+              <span class="flow-direct">直接注意力</span>
+              <b aria-hidden="true">+</b>
+              <span class="flow-hop">两跳证据</span>
+            </div>
+            <div class="value-equation">
+              <span>随输入而变的相关性</span>
+              <b>&times;</b>
+              <span>表示保真度增益</span>
+              <b>&times;</b>
+              <span>KV 头敏感度</span>
+            </div>
+            <div class="value-tree">
+              <span class="value-parent">节点价值</span>
+              <span class="value-child">token</span><span class="value-child">token</span><span class="value-child">token</span><span class="value-child">token</span>
+            </div>
+            <p>子节点聚合到父节点时总价值守恒，因此同一信号既能为根节点的覆盖范围定价，也能为树中更深层的细化定价。</p>
+          </div>
+        </section>
+
+        <section class="method-chapter floor-chapter" aria-labelledby="floor-title">
+          <div class="chapter-copy">
+            <p class="chapter-index">精确信息保护</p>
+            <h3 id="floor-title">单例保底机制保护贪心步骤可能低估的事实。</h3>
+            <p>
+              姓名、数字、标签与少样本输出格式的收益可能并不平滑：抵达精确叶节点非常有用，但通往它的中间 Split 若逐步观察，可能显得没有那么值得。
+            </p>
+            <p>
+              因此，GraceKV 会在主竞价前，从高价值的 <code>(层, KV 头, token)</code> 叶节点中隔离出一个受预算上限约束的小集合。单例保底不免费、不在树外复制。
+            </p>
+          </div>
+          <div class="floor-path" aria-label="单例保底路径：从语义槽根节点，经由内部区间，到达精确的 Aaron Benward token">
+            <div><span>根节点 Add</span><strong>证据语义槽</strong></div>
+            <i aria-hidden="true"></i>
+            <div><span>Split / 抽取</span><strong>包含姓名的区间</strong></div>
+            <i aria-hidden="true"></i>
+            <div class="floor-exact"><span>精确叶节点</span><strong>Aaron Benward</strong></div>
+            <p>完整路径成本计入同一个硬物理预算；共享祖先只付费一次。</p>
+          </div>
+        </section>
+
+        <section class="method-chapter auction-chapter" aria-labelledby="auction-title">
+          <div class="chapter-copy">
+            <p class="chapter-index">04 &middot; 自顶向下的预算流</p>
+            <h3 id="auction-title">把所有可行的 Add 与 Split 放进同一个队列。</h3>
+            <p>
+              Add 比较的是完全丢弃与一个根节点覆盖；Split 比较的是父原型与更细的子节点集合。两者都按每个新增缓存条目的收益评分，因此早期层中的一次操作，可以直接与其他层、KV 头、语义槽或局部分辨率的操作竞争。这就是全局 Add/Split 竞价：全局指竞争范围，而非求得全局最优。
+            </p>
+            <div class="utility-formula" aria-label="每条目效用等于相关性乘以保真度增益再乘以 KV 头敏感度，除以新增物理条目数">
+              <span>每条目效用</span>
+              <strong>=</strong>
+              <span>相关性 &times; 保真度增益 &times; KV 头敏感度</span>
+              <strong>&divide;</strong>
+              <span>新增物理条目数</span>
+            </div>
+          </div>
+
+        <div class="auction-board" aria-label="全局 Add/Split 竞价示意">
+            <div class="auction-heading">
+              <div>
+                <span>示意性的六条目竞价</span>
+                <strong>当前负担得起的最高边际效用，赢得下一个名额</strong>
+              </div>
+              <div class="budget-meter" aria-label="示意预算的六个条目均已分配"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+            <ol class="auction-queue">
+              <li><span>1</span><div><strong>保底路径 &middot; 精确 token</strong><small>第 18 层 &middot; 第 2 头 &middot; 语义槽 B &middot; 成本 3</small></div><i style="--utility: 100%"></i></li>
+              <li><span>2</span><div><strong>Split &middot; 到期短语</strong><small>第 18 层 &middot; 第 2 头 &middot; 语义槽 B &middot; 成本 1</small></div><i style="--utility: 78%"></i></li>
+              <li><span>3</span><div><strong>Add &middot; 故障排查记录</strong><small>第 9 层 &middot; 第 0 头 &middot; 语义槽 C &middot; 成本 1</small></div><i style="--utility: 57%"></i></li>
+              <li><span>4</span><div><strong>Add &middot; 会议背景</strong><small>第 4 层 &middot; 第 1 头 &middot; 语义槽 A &middot; 成本 1</small></div><i style="--utility: 39%"></i></li>
+            </ol>
+            <div class="toy-cache" aria-label="示意性的最终六条目缓存：语义槽 A 有一个粗粒度条目，语义槽 B 有四个混合分辨率条目，语义槽 C 有一个粗粒度条目">
+              <span class="toy-coarse">A 粗粒度</span>
+              <span class="toy-merged">B 上下文</span>
+              <span class="toy-exact">ZX-41</span>
+              <span class="toy-exact">周五</span>
+              <span class="toy-merged">B 细节</span>
+              <span class="toy-coarse">C 粗粒度</span>
+            </div>
+            <p>这里的数值只用于示意。真实队列横跨所有层、KV 头、语义槽以及当前已经暴露的树操作。</p>
+          </div>
+        </section>
+
+        <section class="method-chapter pack-chapter" aria-labelledby="pack-title">
+          <div class="chapter-copy">
+            <p class="chapter-index">05 &middot; 物理缓存打包</p>
+            <h3 id="pack-title">只写入竞价胜出的前沿节点。</h3>
+            <p>
+              每个层—KV 头组合都会得到独立长度的不等长缓存。未被选中的根节点不产生条目；内部节点存储打包原型；单例节点存储原始 K/V。新生成的 token 以多重性 1 追加。
+            </p>
+            <p>
+              当预算恢复到 FullKV 规模时，每棵树都可以展开到 token 叶节点，并精确恢复原始上下文条目。
+            </p>
+          </div>
+          <div class="ragged-cache" role="img" aria-label="不同层与 KV 头组合具有长度不等的缓存行，其中混合了粗粒度原型、细化区段和精确单例条目。">
+            <div><b>L4 H0</b><span class="cache-coarse">16</span><span class="cache-coarse">16</span><span class="cache-refined">4</span><span class="cache-exact">1</span></div>
+            <div><b>L9 H1</b><span class="cache-coarse">32</span><span class="cache-refined">8</span><span class="cache-refined">4</span><span class="cache-exact">1</span><span class="cache-exact">1</span><span class="cache-refined">4</span></div>
+            <div><b>L18 H2</b><span class="cache-refined">8</span><span class="cache-exact">1</span><span class="cache-exact">1</span><span class="cache-exact">1</span><span class="cache-refined">2</span><span class="cache-refined">4</span><span class="cache-coarse">16</span></div>
+            <div><b>L23 H3</b><span class="cache-coarse">32</span><span class="cache-coarse">16</span><span class="cache-refined">4</span></div>
+            <p><span class="cache-coarse"></span>粗粒度原型 <span class="cache-refined"></span>细化原型 <span class="cache-exact"></span>精确 token</p>
+          </div>
+        </section>
+
+        <details class="technical-details">
+          <summary>技术细节与默认设置</summary>
+          <div>
+            <p><strong>语义槽构建。</strong>多层、多尺度曲率在采样深度与窗口之间做稳定化；惊异度是较弱的辅助边界信号。默认语义槽长度为 16&ndash;128 个 token，目标为 64。</p>
+            <p><strong>价值流。</strong>问题与序列尾部探针提供直接相关性的种子；默认权重 0.3 的两次图传播恢复间接证据。父节点价值等于子节点价值之和。</p>
+            <p><strong>原型保真度。</strong>基于探针的失真以 0.25:0.75 加权注意力分布误差与 Value 聚合误差。构树时会同时考虑高曲率候选切分点和区间中点，也可以用三路子节点集合隔离一个显著 token。</p>
+            <p><strong>单例保底机制。</strong>默认上限是可分配基础预算的 0.6，但这是硬上限，并不保证一定花掉 60%。每个最终实现的单例都要支付完整树路径成本。</p>
+          </div>
+        </details>
+
+        <figure class="paper-figure method-figure technical-overview-figure">
+          <a href="assets/method-overview.webp" target="_blank" rel="noreferrer" aria-label="以完整分辨率打开 GraceKV 方法总览图">
+            <img
+              src="assets/method-overview.webp"
+              width="2000"
+              height="864"
+              alt="GraceKV 完整方法总览：曲率引导的原型树、全局预算流，以及结合注意力、多跳相关性、失真和 KV 头敏感度的价值流。"
+              loading="lazy"
+              decoding="async"
+            />
+          </a>
+          <figcaption>
+            完整技术总览。上方网页示意图按步骤拆解了同一条流水线；点击图 2 可查看论文中的完整分辨率版本。
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section results-section" id="results" aria-labelledby="results-title">
+      <div class="section-inner">
+        <div class="section-heading heading-grid">
+          <div>
+            <p class="section-label">效果与现实意义</p>
+            <h2 id="results-title">预算越紧，灵活分配的缓存越能保持用途。</h2>
+          </div>
+          <p class="section-lead">
+            核心结果不只是某一个基准上的孤立胜利。GraceKV 在需求相反的任务之间都保持竞争力：摘要与聚合需要广泛的覆盖范围，问答与检索则需要锐利的局部可寻址性。
+          </p>
+        </div>
+
+        <div class="result-stats">
+          <article class="result-stat">
+            <strong>20 / 24</strong>
+            <span>LongBench 的 24 个设置中有 20 个排名第一，其余 4 个排名第二</span>
+          </article>
+          <article class="result-stat">
+            <strong>24 / 32</strong>
+            <span>在 Qwen2.5-7B 的 LongBench + RULER 任务—预算组合中排名第一</span>
+          </article>
+          <article class="result-stat">
+            <strong>128&times;</strong>
+            <span>LongBench 中评估的最高压缩率；这是压力测试，而不是无损声明</span>
+          </article>
+        </div>
+
+        <div class="task-needs">
+          <div>
+            <span>摘要</span>
+            <strong>让整篇文档始终在视野中</strong>
+            <p>广泛但较低的局部分辨率，可以避免整个主题或章节完全消失。</p>
+          </div>
+          <div>
+            <span>问答与检索</span>
+            <strong>精确解析少数关键位置</strong>
+            <p>在漫长的干扰上下文中，姓名、数值与证据跳转需要精确条目或更细的 Split。</p>
+          </div>
+          <div>
+            <span>少样本生成</span>
+            <strong>同时保留模式与精确格式</strong>
+            <p>示例结构受益于覆盖范围，而标签与答案格式则受益于精确单例。</p>
+          </div>
+        </div>
+
+        <div class="table-wrap" role="region" aria-labelledby="benchmark-table-title" aria-describedby="benchmark-table-note" tabindex="0">
+          <div class="table-heading">
+            <h3 id="benchmark-table-title">LongBench：所有已报告压缩率</h3>
+            <p id="benchmark-table-note">模型为 Qwen2.5-7B-Instruct。问答使用 F1，摘要与少样本使用 Rouge-L，所有数值均乘以 100。</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">任务</th>
+                <th scope="col">FullKV</th>
+                <th scope="col">4&times;</th>
+                <th scope="col">8&times;</th>
+                <th scope="col">16&times;</th>
+                <th scope="col">32&times;</th>
+                <th scope="col">64&times;</th>
+                <th scope="col">128&times;</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">单文档问答</th>
+                <td>43.95</td><td><strong>42.97</strong></td><td><strong>41.58</strong></td><td><strong>38.45</strong></td><td><strong>35.57</strong></td><td><strong>31.49</strong></td><td><strong>25.81</strong></td>
+              </tr>
+              <tr>
+                <th scope="row">多文档问答</th>
+                <td>29.86</td><td><strong>30.18</strong></td><td><strong>29.90</strong></td><td><strong>28.78</strong></td><td><strong>28.18</strong></td><td><strong>27.09</strong></td><td><strong>25.19</strong></td>
+              </tr>
+              <tr>
+                <th scope="row">摘要</th>
+                <td>15.97</td><td><strong>15.03</strong></td><td><strong>14.51</strong></td><td><strong>14.04</strong></td><td><strong>13.48</strong></td><td><strong>12.58</strong></td><td><strong>11.88</strong></td>
+              </tr>
+              <tr>
+                <th scope="row">少样本</th>
+                <td>36.23</td><td><strong>35.82</strong></td><td><strong>34.77</strong></td><td><strong>33.92</strong></td><td><strong>33.80</strong></td><td><strong>33.18</strong></td><td><strong>32.83</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="quality-reading">
+          <div class="quality-copy">
+            <p class="section-label">如何解读质量曲线</p>
+            <h3>压缩是一组可选运行点，而不是非黑即白的结论。</h3>
+            <p>
+              在 4 倍压缩下，每个 LongBench 类别都保留了各自 FullKV 分数的至少 94%；到 16 倍时，四类任务仍保留约 87%&ndash;96%。128 倍是刻意设置的压力测试：模型仍保有可用行为，但损失会明显随任务而变化。
+            </p>
+            <div class="quality-regimes" aria-label="三个已评估压缩区间的解释">
+              <div><span>4&times;</span><strong>接近 FullKV 区间</strong><small>每一行均保留至少 94%</small></div>
+              <div><span>16&times;</span><strong>实用高压缩区间</strong><small>各行保留 87%&ndash;96%</small></div>
+              <div><span>128&times;</span><strong>极端预算区间</strong><small>质量取决于任务必须保留什么</small></div>
+            </div>
+          </div>
+
+          <figure class="retention-figure" aria-labelledby="retention-title">
+            <figcaption id="retention-title">128 倍压缩时，各行 FullKV 分数的保留比例</figcaption>
+            <div class="retention-row">
+              <span>少样本</span>
+              <i><b style="--retention: 90.6%"></b></i>
+              <strong>90.6%</strong>
+            </div>
+            <div class="retention-row">
+              <span>多文档问答</span>
+              <i><b style="--retention: 84.4%"></b></i>
+              <strong>84.4%</strong>
+            </div>
+            <div class="retention-row">
+              <span>摘要</span>
+              <i><b style="--retention: 74.4%"></b></i>
+              <strong>74.4%</strong>
+            </div>
+            <div class="retention-row">
+              <span>单文档问答</span>
+              <i><b style="--retention: 58.7%"></b></i>
+              <strong>58.7%</strong>
+            </div>
+            <p>这些描述性比例按已发表表格中的每一行计算，并不是普适的质量保证。</p>
+          </figure>
+        </div>
+
+        <div class="ruler-result" aria-label="GraceKV 的 RULER 检索结果：4 倍压缩、名义 4096 条目预算时为 87.25；8 倍、2048 条目时为 86.75；16 倍、1024 条目时为 86.25；32 倍、512 条目时为 76.50">
+          <div>
+            <p class="section-label">预算收紧时的精确检索</p>
+            <h3>在最紧的已评估 32 倍预算下，GraceKV 仍高于 76 分。</h3>
+            <p>RULER 集合召回率检查是否找回每一个远距离目标，因此它严格考验的是局部可寻址性，而不是近似语义相似度。在 Qwen2.5-7B-Instruct Retrieval 设置中，从 4 倍压缩收紧到 16 倍只损失 1.00 分，而从 16 倍收紧到 32 倍会损失 9.75 分。</p>
+          </div>
+          <div class="ruler-track">
+            <span><strong>87.25</strong><small>4&times; · 名义 4K</small></span>
+            <i aria-hidden="true"></i>
+            <span><strong>86.75</strong><small>8&times; · 名义 2K</small></span>
+            <i aria-hidden="true"></i>
+            <span><strong>86.25</strong><small>16&times; · 名义 1K</small></span>
+            <i aria-hidden="true"></i>
+            <span><strong>76.50</strong><small>32&times; · 名义 512</small></span>
+          </div>
+        </div>
+
+        <div class="efficiency-grid">
+          <figure class="efficiency-figure">
+            <img
+              src="assets/efficiency.webp"
+              width="960"
+              height="1314"
+              alt="KV 缓存显存与单 token 解码延迟随上下文长度变化的曲线，比较 FullKV 与 GraceKV 的 4 倍、8 倍和 16 倍压缩。"
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>上下文增长时的物理 KV 缓存显存与单 token 解码延迟。图引自论文图 3。</figcaption>
+          </figure>
+
+          <div class="efficiency-copy">
+            <p class="section-label">30K 上下文下的效率</p>
+            <h3>直接的部署收益，是更充裕的显存空间。</h3>
+            <dl class="efficiency-metrics">
+              <div><dt>FullKV</dt><dd>1.77 GB</dd></div>
+              <div><dt>GraceKV 4&times;</dt><dd>463 MB</dd></div>
+              <div><dt>GraceKV 8&times;</dt><dd>246 MB</dd></div>
+              <div><dt>GraceKV 16&times;</dt><dd>137 MB</dd></div>
+            </dl>
+            <p class="efficiency-meaning">
+              这分别比 FullKV 少用约 74%、86% 和 92% 的 KV 缓存显存。现实中，这份余量可能让更长上下文或更大批次成为可能，具体还取决于模型权重、激活、服务栈与可用 GPU 显存。
+            </p>
+
+            <div class="capacity-translation" aria-label="在 FullKV 的 1.77 GB KV 缓存显存范围内，能够容纳的 30K KV 缓存占用数量的近似算术换算">
+              <p>在同一个 <strong>1.77 GB、仅计算 KV 的显存范围</strong>内</p>
+              <div><span>FullKV</span><i><b style="--capacity: 7.7%"></b></i><strong>1.0 份缓存</strong></div>
+              <div><span>GraceKV 4&times;</span><i><b style="--capacity: 29.5%"></b></i><strong>&asymp;3.8 份缓存</strong></div>
+              <div><span>GraceKV 8&times;</span><i><b style="--capacity: 55.8%"></b></i><strong>&asymp;7.2 份缓存</strong></div>
+              <div><span>GraceKV 16&times;</span><i><b style="--capacity: 100%"></b></i><strong>&asymp;12.9 份缓存</strong></div>
+              <small>这只是 KV-only 的缓存占用算术，不是端到端并发承诺；权重、激活、显存碎片与服务栈也会消耗显存。</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="practical-impact">
+          <div>
+            <span>稳态解码</span>
+            <strong>更少条目会减少缓存流量，但不保证所有场景延迟都更低</strong>
+            <p>在统一的固定缓存贪心解码器下，GraceKV 与 FullKV 通常都处在 23&ndash;25 ms/token。同一方法在不同数据集上可能稍快或稍慢，因此最稳健的结论是显存下降，速度收益仍取决于 kernel 与 workload。</p>
+          </div>
+          <div>
+            <span>一次性构建</span>
+            <strong>灵活性带来前期开销</strong>
+            <p>产生主质量结果的默认路径，在下方五个详细 workload 上需要 3.00&ndash;21.53 秒。这笔成本在预填充后支付一次，也让原型树构建成为最需要继续优化的系统环节。</p>
+          </div>
+          <div>
+            <span>最值得使用的场景</span>
+            <strong>长上下文或可复用上下文</strong>
+            <p>当显存是主要约束、同一上下文将支持很长的续写或多轮复用，或高压缩原本会抹去关键证据时，这种权衡最有吸引力。</p>
+          </div>
+        </div>
+
+        <div class="measured-systems">
+          <div class="measured-systems-heading">
+            <div>
+              <p class="section-label">8 倍压缩下的实测系统权衡</p>
+              <h3>缓存显著缩小，但一次性构建成本也必须被看见。</h3>
+            </div>
+            <p>
+              Qwen2.5-7B-Instruct；预填充后只压缩一次，随后使用固定 RaggedCache 与同一个贪心解码器。LongBench 每行约 200 个样本，RULER 每行 100 个样本。表中采用产生主质量结果的默认路径。
+            </p>
+          </div>
+
+          <div class="system-table-wrap" role="region" aria-labelledby="system-table-title" aria-describedby="system-table-note" tabindex="0">
+            <h4 class="sr-only" id="system-table-title">八倍压缩下的实测物理缓存、解码延迟和一次性构建延迟</h4>
+            <table class="system-table">
+              <thead>
+                <tr>
+                  <th scope="col">Workload</th>
+                  <th scope="col">FullKV 缓存</th>
+                  <th scope="col">GraceKV 缓存</th>
+                  <th scope="col">剩余比例</th>
+                  <th scope="col">解码：Full &rarr; Grace</th>
+                  <th scope="col">一次构建</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">Qasper</th><td>294.9 MiB</td><td>51.7 MiB</td><td><strong>17.5%</strong></td><td>23.15 &rarr; 24.02 ms/token</td><td>5.51 s</td></tr>
+                <tr><th scope="row">MultiNews</th><td>181.3 MiB</td><td>53.9 MiB</td><td><strong>29.7%</strong></td><td>23.23 &rarr; 23.33 ms/token</td><td>3.00 s</td></tr>
+                <tr><th scope="row">SAMSum</th><td>523.2 MiB</td><td>93.7 MiB</td><td><strong>17.9%</strong></td><td>24.43 &rarr; 23.95 ms/token</td><td>13.03 s</td></tr>
+                <tr><th scope="row">RULER-FWE</th><td>877.0 MiB</td><td>130.3 MiB</td><td><strong>14.9%</strong></td><td>25.63 &rarr; 24.06 ms/token</td><td>20.41 s</td></tr>
+                <tr><th scope="row">RULER-MQNIAH</th><td>887.4 MiB</td><td>131.4 MiB</td><td><strong>14.8%</strong></td><td>25.17 &rarr; 23.28 ms/token</td><td>21.53 s</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="system-table-note" id="system-table-note">
+            “剩余比例”指 GraceKV 缓存除以 FullKV 缓存。这些延迟只描述统一的一次压缩协议，并不是端到端服务指标，也不能外推到原生的逐步淘汰实现。
+          </p>
+        </div>
+
+        <div class="deployment-guide">
+          <div class="deployment-heading">
+            <p class="section-label">它在现实中可能改变什么</p>
+            <h3>GraceKV 能在固定显存上限下创造余量。</h3>
+            <p>节省下来的 KV 缓存字节，可能支持更长的可服务上下文或更大批次。这些是部署层面的含义，而不是端到端服务测量；最终收益还取决于模型权重、激活、显存碎片与调度器。</p>
+          </div>
+          <div class="deployment-scenarios">
+            <article>
+              <span>文档助手</span>
+              <strong>让更多原始材料常驻显存</strong>
+              <p>更小的缓存可以让一份长报告、合同或论文集合中的更多内容常驻，同时不强迫每个章节获得相同局部分辨率。从同一份完整预填充状态重复生成，还可以摊薄构建成本。</p>
+            </article>
+            <article>
+              <span>智能体与代码系统</span>
+              <strong>在长历史中保留精确标识符</strong>
+              <p>代码仓库上下文、工具轨迹、实体名、数字与输出格式，把大量背景和少数精确事实混合在一起，恰好对应方法对覆盖范围与局部分辨率的联合分配。</p>
+            </article>
+            <article>
+              <span>多用户服务</span>
+              <strong>创造潜在的批次或并发余量</strong>
+              <p>当 KV 显存限制请求准入时，更小的物理缓存可能让系统在设备上保留更多会话，或减少驱逐、卸载缓存的压力。论文并未端到端测量这一行为。</p>
+            </article>
+            <article class="deployment-caution">
+              <span>权衡不够有利的场景</span>
+              <strong>短请求、一次性请求或计算受限请求</strong>
+              <p>如果生成很短、上下文很小，或注意力不受显存带宽限制，那么秒级的一次性构建成本可能超过稳态节省。因此论文将显存容量视为近期最主要的系统收益。</p>
+            </article>
+          </div>
+        </div>
+
+        <div class="ablation-lessons">
+          <div class="ablation-heading">
+            <p class="section-label">消融实验告诉我们什么</p>
+            <h3>收益来自整条流水线的协同。</h3>
+            <p>以下为 Qwen2.5-7B 单文档问答相对完整方法的分数变化；降幅越大，说明该组件承担的作用越关键。</p>
+          </div>
+          <dl>
+            <div><dt>去掉多分辨率原型树 <span>&minus;2.53 / &minus;2.37</span></dt><dd>缓存将失去从丢弃、粗粒度覆盖到精确 token 保留之间连续调整的能力。</dd></div>
+            <div><dt>去掉全局分配 <span>&minus;2.25 / &minus;1.98</span></dt><dd>固定的层—KV 头上限会困住未用预算，使它无法流向其他位置中效用更高的操作。</dd></div>
+            <div><dt>去掉单例保底机制 <span>&minus;1.14 / &minus;1.45</span></dt><dd>贪心边际步骤可能模糊实体、数字、标签等事实，因为它们的精确收益只有走完整条细化路径后才显现。</dd></div>
+            <div><dt>去掉曲率引导结构 <span>&minus;0.43 / &minus;0.93</span></dt><dd>均匀分块更容易跨越表征转向点进行合并，或在本可共享长原型的平滑区段上浪费根节点。</dd></div>
+            <div><dt>去掉多跳相关性 <span>&minus;0.57 / &minus;0.37</span></dt><dd>当问题主要关注推理链的第一跳时，间接证据可能得到过低的价值。</dd></div>
+          </dl>
+          <p class="ablation-note">每组数字分别是在 8 倍 / 64 倍压缩下的分数下降；完整方法对应 41.58 / 31.49。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section citation-section" id="citation" aria-labelledby="citation-title">
+      <div class="section-inner citation-grid">
+        <div>
+          <p class="section-label">引用</p>
+          <h2 id="citation-title">每个缓存条目都应物有所值。</h2>
+          <p class="citation-copy">
+            田昊霖、刘宇哲、王同翰，2026。Every Cache Entry Earns Its Place: Global Allocation of Resolution and Coverage for KV Cache Compression。arXiv:2608.07001。
+          </p>
+          <div class="citation-links">
+            <a href="https://doi.org/10.48550/arXiv.2608.07001" target="_blank" rel="noreferrer">
+              DOI
+              <svg aria-hidden="true"><use href="#icon-external"></use></svg>
+            </a>
+          </div>
+        </div>
+
+        <div class="bibtex-block">
+          <div class="bibtex-header">
+            <span>BibTeX</span>
+            <button type="button" data-copy-citation aria-label="复制 BibTeX" title="复制 BibTeX">
+              <svg aria-hidden="true"><use href="#icon-copy"></use></svg>
+              <span data-copy-label>复制</span>
+            </button>
+          </div>
+          <pre><code id="bibtex">@article{tian2026every,
+  title   = {Every Cache Entry Earns Its Place: Global Allocation of Resolution and Coverage for KV Cache Compression},
+  author  = {Tian, Haolin and Liu, Yuzhe and Wang, Tonghan},
+  journal = {arXiv preprint arXiv:2608.07001},
+  year    = {2026}
+}</code></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <a class="footer-mark" href="#top">GraceKV</a>
+      <p>田昊霖、刘宇哲、王同翰 · 清华大学</p>
+      <nav aria-label="页脚导航">
+        <a href="../researchs.html">研究项目</a>
+        <a href="https://arxiv.org/abs/2608.07001" target="_blank" rel="noreferrer">arXiv</a>
+        <a href="https://arxiv.org/pdf/2608.07001" target="_blank" rel="noreferrer">PDF</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

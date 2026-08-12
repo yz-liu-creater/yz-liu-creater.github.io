@@ -8,7 +8,7 @@
     name="description"
     content="GraceKV globally allocates KV cache resolution and coverage across layers, heads, and context regions under a shared cache budget."
   />
-  <meta name="author" content="Haolin Tian, Yuzhe Liu, Tonghan Wang" />
+  <meta name="author" content="Haolin Tian, Yuzhe Liu, Tonghan Wang (田昊霖, 刘宇哲, 王同翰)" />
   <meta property="og:type" content="article" />
   <meta property="og:site_name" content="GraceKV" />
   <meta property="og:title" content="GraceKV: Global Allocation for KV Cache Compression" />
@@ -22,13 +22,16 @@
   <meta name="twitter:title" content="GraceKV: Global Allocation for KV Cache Compression" />
   <meta
     name="twitter:description"
-    content="A global resource allocation approach to KV cache compression, robust up to 128x compression."
+    content="A global resource allocation approach to KV cache compression, with useful task behavior retained in a 128x stress test."
   />
   <meta name="twitter:image" content="https://yz-liu-creater.github.io/gracekv/assets/og-gracekv.webp" />
   <link rel="canonical" href="https://yz-liu-creater.github.io/gracekv/" />
+  <link rel="alternate" hreflang="en" href="https://yz-liu-creater.github.io/gracekv/" />
+  <link rel="alternate" hreflang="zh-CN" href="https://yz-liu-creater.github.io/gracekv/zh.html" />
+  <link rel="alternate" hreflang="x-default" href="https://yz-liu-creater.github.io/gracekv/" />
   <link rel="preload" as="image" href="assets/method-overview.webp" fetchpriority="high" />
-  <link rel="stylesheet" href="style.css?v=20260812e" />
-  <script src="script.js?v=20260812e" defer></script>
+  <link rel="stylesheet" href="style.css?v=20260812g" />
+  <script src="script.js?v=20260812g" defer></script>
   <title>GraceKV | Global Allocation for KV Cache Compression</title>
   <script type="application/ld+json">
     {
@@ -39,7 +42,6 @@
       "datePublished": "2026-08-07",
       "identifier": "https://doi.org/10.48550/arXiv.2608.07001",
       "url": "https://arxiv.org/abs/2608.07001",
-      "license": "https://creativecommons.org/licenses/by/4.0/",
       "author": [
         { "@type": "Person", "name": "Haolin Tian" },
         { "@type": "Person", "name": "Yuzhe Liu" },
@@ -106,15 +108,22 @@
         <a href="#citation" data-section-link="citation">Citation</a>
       </nav>
 
-      <a
-        class="header-paper"
-        href="https://arxiv.org/pdf/2608.07001"
-        target="_blank"
-        rel="noreferrer"
-      >
-        <svg aria-hidden="true"><use href="#icon-file-text"></use></svg>
-        <span>Paper</span>
-      </a>
+      <div class="header-tools">
+        <div class="language-switch" aria-label="Language">
+          <a href="index.html" lang="en" hreflang="en" aria-current="page">EN</a>
+          <span aria-hidden="true">/</span>
+          <a href="zh.html" lang="zh-CN" hreflang="zh-CN">中文</a>
+        </div>
+        <a
+          class="header-paper"
+          href="https://arxiv.org/pdf/2608.07001"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <svg aria-hidden="true"><use href="#icon-file-text"></use></svg>
+          <span>Paper</span>
+        </a>
+      </div>
     </div>
   </header>
 
@@ -170,7 +179,7 @@
         </div>
         <div class="signal-item">
           <strong>128&times;</strong>
-          <span>Robust under severe compression</span>
+          <span>Useful behavior in a 128&times; stress test</span>
         </div>
         <div class="signal-item">
           <strong>Zero</strong>
@@ -232,7 +241,7 @@
           </div>
         </div>
         <p class="input-budget-note">
-          Compression happens after one standard prefill pass. There is no extra model forward, no additional training, and no mask pretending that removed entries still exist.
+          Compression happens after one standard prefill pass. GraceKV reuses the Q/K/V tensors, sampled hidden states, question-region outputs, and token surprisal already collected in that pass. There is no extra model forward, no additional training, and no mask pretending that removed entries still exist.
         </p>
 
         <div class="method-contract">
@@ -293,7 +302,7 @@
             />
           </a>
           <figcaption>
-            At 64&times; compression, names and evidence-chain tokens receive fine or exact representations, while a background region 5.5K tokens away is merged or dropped. The right panels show that the entry count also varies across layers and KV heads. Figure 1 from the paper; open it for the full-resolution view.
+            At 64&times; compression, evidence spans at tokens 3185&ndash;3272 and 5995&ndash;6082 receive fine or exact representations, while an irrelevant span at 9000&ndash;9087, about 5.5K tokens from either evidence region, is merged or dropped. Allocation is also unequal across layer&ndash;KV-head pairs: 232 entries on average, ranging from 121 to 410. Figure 1 from the paper; open it for the full-resolution view.
           </figcaption>
         </figure>
 
@@ -501,7 +510,7 @@
               <div class="budget-meter" aria-label="Six of six illustrative budget entries allocated"><i></i><i></i><i></i><i></i><i></i><i></i></div>
             </div>
             <ol class="auction-queue">
-              <li><span>1</span><div><strong>Floor path &middot; exact code</strong><small>Layer 18 &middot; Head 2 &middot; Slot B &middot; cost 3</small></div><i style="--utility: 100%"></i></li>
+              <li><span>1</span><div><strong>Floor path &middot; exact token</strong><small>Layer 18 &middot; Head 2 &middot; Slot B &middot; cost 3</small></div><i style="--utility: 100%"></i></li>
               <li><span>2</span><div><strong>Split &middot; expiry phrase</strong><small>Layer 18 &middot; Head 2 &middot; Slot B &middot; cost 1</small></div><i style="--utility: 78%"></i></li>
               <li><span>3</span><div><strong>Add &middot; troubleshooting notes</strong><small>Layer 9 &middot; Head 0 &middot; Slot C &middot; cost 1</small></div><i style="--utility: 57%"></i></li>
               <li><span>4</span><div><strong>Add &middot; meeting background</strong><small>Layer 4 &middot; Head 1 &middot; Slot A &middot; cost 1</small></div><i style="--utility: 39%"></i></li>
@@ -584,12 +593,12 @@
             <span>LongBench settings ranked first; GraceKV ranks second in the other four</span>
           </article>
           <article class="result-stat">
-            <strong>76.50</strong>
-            <span>RULER retrieval at the tightest evaluated budget (32&times; compression)</span>
+            <strong>24 / 32</strong>
+            <span>LongBench + RULER task-budget settings ranked first on Qwen2.5-7B</span>
           </article>
           <article class="result-stat">
             <strong>128&times;</strong>
-            <span>Highest evaluated LongBench compression ratio</span>
+            <span>Highest evaluated LongBench compression ratio, used as a stress test rather than a lossless claim</span>
           </article>
         </div>
 
@@ -748,18 +757,56 @@
           <div>
             <span>Steady-state decoding</span>
             <strong>Fewer entries reduce cache traffic, but not every latency</strong>
-            <p>At the longest evaluated context in Figure 3, FullKV is up to 1.7&times; slower. The detailed appendix also finds GraceKV and FullKV nearly tied on some datasets under the unified decoder, so memory reduction is the robust result; speedup remains kernel- and workload-dependent.</p>
+            <p>Under the unified fixed-cache greedy decoder, GraceKV and FullKV are typically in the same 23&ndash;25 ms/token range. The measured difference changes sign across datasets, so memory reduction is the robust conclusion; speedup remains kernel- and workload-dependent.</p>
           </div>
           <div>
             <span>One-time construction</span>
             <strong>Flexibility has an upfront cost</strong>
-            <p>GraceKV builds input-conditioned trees and allocates the budget once after prefill. This remains a seconds-level cost whose exact value depends strongly on context length and engineering configuration, making construction the main systems optimization target.</p>
+            <p>The default path used for the main quality results takes 3.00&ndash;21.53 seconds across the five detailed workloads below. This is paid once after prefill, making tree construction the main systems optimization target.</p>
           </div>
           <div>
             <span>Where it matters most</span>
             <strong>Long or reusable contexts</strong>
             <p>The tradeoff is most attractive when memory is the binding constraint, the context will support a long continuation or repeated turns, or severe compression would otherwise erase critical evidence.</p>
           </div>
+        </div>
+
+        <div class="measured-systems">
+          <div class="measured-systems-heading">
+            <div>
+              <p class="section-label">Measured system tradeoff at 8&times;</p>
+              <h3>Large cache savings come with a visible one-time build cost.</h3>
+            </div>
+            <p>
+              Qwen2.5-7B-Instruct; one compression after prefill, then a fixed RaggedCache and the same greedy decoder. LongBench rows average about 200 examples and RULER rows 100. The table reports the default path that produced the main quality results.
+            </p>
+          </div>
+
+          <div class="system-table-wrap" role="region" aria-labelledby="system-table-title" aria-describedby="system-table-note" tabindex="0">
+            <h4 class="sr-only" id="system-table-title">Measured physical cache, decoding latency, and one-time construction latency at eight times compression</h4>
+            <table class="system-table">
+              <thead>
+                <tr>
+                  <th scope="col">Workload</th>
+                  <th scope="col">FullKV cache</th>
+                  <th scope="col">GraceKV cache</th>
+                  <th scope="col">Cache left</th>
+                  <th scope="col">Decode, Full &rarr; Grace</th>
+                  <th scope="col">Build once</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">Qasper</th><td>294.9 MiB</td><td>51.7 MiB</td><td><strong>17.5%</strong></td><td>23.15 &rarr; 24.02 ms/token</td><td>5.51 s</td></tr>
+                <tr><th scope="row">MultiNews</th><td>181.3 MiB</td><td>53.9 MiB</td><td><strong>29.7%</strong></td><td>23.23 &rarr; 23.33 ms/token</td><td>3.00 s</td></tr>
+                <tr><th scope="row">SAMSum</th><td>523.2 MiB</td><td>93.7 MiB</td><td><strong>17.9%</strong></td><td>24.43 &rarr; 23.95 ms/token</td><td>13.03 s</td></tr>
+                <tr><th scope="row">RULER-FWE</th><td>877.0 MiB</td><td>130.3 MiB</td><td><strong>14.9%</strong></td><td>25.63 &rarr; 24.06 ms/token</td><td>20.41 s</td></tr>
+                <tr><th scope="row">RULER-MQNIAH</th><td>887.4 MiB</td><td>131.4 MiB</td><td><strong>14.8%</strong></td><td>25.17 &rarr; 23.28 ms/token</td><td>21.53 s</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="system-table-note" id="system-table-note">
+            “Cache left” is GraceKV cache divided by FullKV cache. These latency numbers describe this unified one-shot protocol; they are not end-to-end service measurements and should not be extrapolated to native step-wise eviction implementations.
+          </p>
         </div>
 
         <div class="deployment-guide">
@@ -796,14 +843,16 @@
           <div class="ablation-heading">
             <p class="section-label">What the ablations say</p>
             <h3>The gains come from coordinating the whole pipeline.</h3>
+            <p>Change in Qwen2.5-7B single-document QA versus the full method. Larger drops identify the parts doing the most work.</p>
           </div>
           <dl>
-            <div><dt>Without global allocation</dt><dd>Fixed layer-head limits trap unused budget and prevent it from flowing to higher-utility operations elsewhere.</dd></div>
-            <div><dt>Without multi-resolution trees</dt><dd>The cache loses the ability to move continuously from dropping to coarse coverage to exact token retention.</dd></div>
-            <div><dt>Without the singleton floor</dt><dd>Greedy marginal steps can blur entities, numbers, labels, and other facts whose exact benefit appears only after a complete refinement path.</dd></div>
-            <div><dt>Without curvature-guided structure</dt><dd>Uniform chunks are more likely to merge across representational turns or spend roots on unnecessarily short smooth regions.</dd></div>
-            <div><dt>Without multi-hop relevance</dt><dd>Indirect evidence can receive too little value when the question attends mainly to the first hop in a reasoning chain.</dd></div>
+            <div><dt>Without multi-resolution trees <span>&minus;2.53 / &minus;2.37</span></dt><dd>The cache loses the ability to move continuously from dropping to coarse coverage to exact token retention.</dd></div>
+            <div><dt>Without global allocation <span>&minus;2.25 / &minus;1.98</span></dt><dd>Fixed layer-head limits trap unused budget and prevent it from flowing to higher-utility operations elsewhere.</dd></div>
+            <div><dt>Without the singleton floor <span>&minus;1.14 / &minus;1.45</span></dt><dd>Greedy marginal steps can blur entities, numbers, labels, and other facts whose exact benefit appears only after a complete refinement path.</dd></div>
+            <div><dt>Without curvature-guided structure <span>&minus;0.43 / &minus;0.93</span></dt><dd>Uniform chunks are more likely to merge across representational turns or spend roots on unnecessarily short smooth regions.</dd></div>
+            <div><dt>Without multi-hop relevance <span>&minus;0.57 / &minus;0.37</span></dt><dd>Indirect evidence can receive too little value when the question attends mainly to the first hop in a reasoning chain.</dd></div>
           </dl>
+          <p class="ablation-note">Each pair reports the score drop at 8&times; / 64&times;; the complete method scores 41.58 / 31.49.</p>
         </div>
       </div>
     </section>
@@ -819,10 +868,6 @@
           <div class="citation-links">
             <a href="https://doi.org/10.48550/arXiv.2608.07001" target="_blank" rel="noreferrer">
               DOI
-              <svg aria-hidden="true"><use href="#icon-external"></use></svg>
-            </a>
-            <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">
-              CC BY 4.0
               <svg aria-hidden="true"><use href="#icon-external"></use></svg>
             </a>
           </div>

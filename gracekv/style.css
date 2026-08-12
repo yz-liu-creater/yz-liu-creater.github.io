@@ -33,6 +33,12 @@ body {
   line-height: 1.6;
 }
 
+html[lang="zh-CN"] body {
+  font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", Inter, ui-sans-serif, system-ui, sans-serif;
+  line-break: strict;
+  overflow-wrap: anywhere;
+}
+
 body.menu-open {
   overflow: hidden;
 }
@@ -180,6 +186,46 @@ svg {
   font-weight: 750;
   text-decoration: none;
   transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.header-tools {
+  display: flex;
+  justify-self: end;
+  align-items: center;
+  gap: 14px;
+}
+
+.language-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.language-switch a {
+  padding: 5px 1px;
+  color: inherit;
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+
+.language-switch a:hover,
+.language-switch a[aria-current="page"] {
+  color: var(--teal);
+}
+
+html[lang="zh-CN"] h2,
+html[lang="zh-CN"] h3,
+html[lang="zh-CN"] h4,
+html[lang="zh-CN"] .paper-title,
+html[lang="zh-CN"] .signal-item strong,
+html[lang="zh-CN"] .result-stat strong,
+html[lang="zh-CN"] .big-number,
+html[lang="zh-CN"] .efficiency-number {
+  font-family: "Noto Serif SC", "Songti SC", SimSun, Georgia, serif;
 }
 
 .header-paper:hover {
@@ -2223,6 +2269,84 @@ tbody tr:last-child td {
   border-color: rgba(231, 184, 34, 0.35);
 }
 
+.measured-systems {
+  margin-top: 80px;
+  padding: 42px;
+  background: var(--navy);
+  border-radius: 8px;
+}
+
+.measured-systems-heading {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1.18fr);
+  gap: 64px;
+  align-items: end;
+}
+
+.measured-systems .section-label,
+.measured-systems h3 {
+  color: #fff2ad;
+}
+
+.measured-systems h3 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 34px;
+  line-height: 1.18;
+}
+
+.measured-systems-heading > p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.system-table-wrap {
+  overflow-x: auto;
+  margin-top: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+}
+
+.system-table-wrap:focus-visible {
+  outline: 3px solid rgba(255, 242, 173, 0.55);
+  outline-offset: 3px;
+}
+
+.system-table {
+  min-width: 910px;
+}
+
+.system-table th,
+.system-table td {
+  padding: 15px 18px;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.system-table thead th {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.system-table tbody th,
+.system-table td strong {
+  color: var(--white);
+}
+
+.system-table td strong {
+  font-size: 13px;
+}
+
+.system-table-note {
+  margin: 18px 0 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
 .deployment-guide {
   display: grid;
   grid-template-columns: minmax(250px, 0.58fr) minmax(0, 1.42fr);
@@ -2305,6 +2429,13 @@ tbody tr:last-child td {
   font-size: 36px;
 }
 
+.ablation-heading > p:last-child {
+  margin: 18px 0 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
 .ablation-lessons dl {
   margin: 0;
 }
@@ -2331,10 +2462,26 @@ tbody tr:last-child td {
   font-weight: 850;
 }
 
+.ablation-lessons dt span {
+  display: block;
+  margin-top: 5px;
+  color: var(--teal);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
 .ablation-lessons dd {
   margin: 0;
   color: var(--ink-soft);
   font-size: 13px;
+}
+
+.ablation-note {
+  grid-column: 2;
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  font-size: 11px;
 }
 
 .citation-section {
@@ -2564,9 +2711,14 @@ tbody tr:last-child td {
   .ruler-result,
   .ablation-lessons,
   .quality-reading,
-  .deployment-guide {
+  .deployment-guide,
+  .measured-systems-heading {
     grid-template-columns: 1fr;
     gap: 36px;
+  }
+
+  .ablation-note {
+    grid-column: 1;
   }
 
   .method-steps {
@@ -2616,6 +2768,15 @@ tbody tr:last-child td {
 
   .header-paper {
     display: none;
+  }
+
+  .header-tools {
+    position: absolute;
+    right: 58px;
+  }
+
+  .language-switch {
+    font-size: 12px;
   }
 
   .site-nav {
@@ -2719,6 +2880,21 @@ tbody tr:last-child td {
 
   .efficiency-figure {
     max-width: 430px;
+  }
+}
+
+@media (max-width: 380px) {
+  .header-inner {
+    width: min(var(--max-width), calc(100% - 20px));
+  }
+
+  .header-tools {
+    right: 52px;
+  }
+
+  .language-switch {
+    gap: 5px;
+    font-size: 11px;
   }
 }
 
@@ -2829,8 +3005,13 @@ tbody tr:last-child td {
 
   .chapter-copy h3,
   .ruler-result h3,
-  .ablation-heading h3 {
+  .ablation-heading h3,
+  .measured-systems h3 {
     font-size: 31px;
+  }
+
+  .measured-systems {
+    padding: 28px 22px;
   }
 
   .slot-demo,
